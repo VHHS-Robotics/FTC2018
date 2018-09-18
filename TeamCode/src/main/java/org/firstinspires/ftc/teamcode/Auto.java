@@ -51,8 +51,8 @@ import com.qualcomm.robotcore.util.Range;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="DriverControl", group="Iterative Opmode")
-public class DriverControl extends OpMode
+@TeleOp(name="AutoControl", group="Iterative Opmode")
+public class Auto extends OpMode
 {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
@@ -60,6 +60,17 @@ public class DriverControl extends OpMode
     private DcMotor rightFront = null;
     private DcMotor leftBack = null;
     private DcMotor rightBack = null;
+
+
+    static final double COUNTS_PER_MOTOR_REV = 1120;    // eg: Andymark Motor Encoder
+    static final double DRIVE_GEAR_REDUCTION = 1.0;     // This is < 1.0 if geared UP
+    static final double WHEEL_DIAMETER_INCHES = 4.0;     // For figuring circumference
+    static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
+            (WHEEL_DIAMETER_INCHES * 3.1415);
+    static final double DRIVE_SPEED = 1.0;
+    static final double TURN_SPEED = 1.0;
+
+
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -101,6 +112,26 @@ public class DriverControl extends OpMode
     @Override
     public void start() {
         runtime.reset();
+
+        //Instructions for the robot
+    }
+
+    public void move(float strafe_y, float strafe_x, float turn){
+        runWithEncoder();
+        resetEncoder();
+
+        if(strafe_y!=0){
+
+
+
+            leftFront.setPower(DRIVE_SPEED);
+            rightFront.setPower(DRIVE_SPEED);
+            leftBack.setPower(DRIVE_SPEED);
+            rightBack.setPower(DRIVE_SPEED);
+        }
+
+
+
     }
 
     /*
@@ -109,33 +140,6 @@ public class DriverControl extends OpMode
     @Override
     public void loop() {
         // Setup a variable for each drive wheel to save power level for telemetry
-        double leftFrontPower;
-        double rightFrontPower;
-        double leftBackPower;
-        double rightBackPower;
-
-        // Choose to drive using either Tank Mode, or POV Mode
-        // Comment out the method that's not used.  The default below is POV.
-
-        // POV Mode uses left stick to go forward, and right stick to turn.
-        // - This uses basic math to combine motions and is easier to drive straight.
-        float strafe_y = gamepad1.left_stick_y;
-        float strafe_x = gamepad1.left_stick_x;
-        float turn  =  gamepad1.right_stick_x;
-
-
-        leftFrontPower    = Range.clip(strafe_y-strafe_x-turn, -1.0, 1.0) ;
-        rightFrontPower   = Range.clip(strafe_y+strafe_x+turn, -1.0, 1.0) ;
-        leftBackPower   = Range.clip(strafe_y+strafe_x-turn, -1.0, 1.0) ;
-        rightBackPower   = Range.clip(strafe_y-strafe_x+turn, -1.0, 1.0) ;
-
-
-        // Send calculated power to wheels
-        leftFront.setPower(leftFrontPower);
-        rightFront.setPower(rightFrontPower);
-        leftBack.setPower(leftBackPower);
-        rightBack.setPower(rightBackPower);
-
         telemetry.addData("leftFrontPower",leftFrontPower);
         telemetry.addData("rightFrontPower",rightFrontPower);
         telemetry.addData("leftBackPower",leftBackPower);
@@ -149,4 +153,18 @@ public class DriverControl extends OpMode
     public void stop() {
     }
 
+
+    public void resetEncoder() {
+        MotorFrontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        MotorBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        MotorFrontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        MotorBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    }
+
+    public void runWithEncoder() {
+        MotorFrontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        MotorBackLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        MotorFrontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        MotorBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
 }
