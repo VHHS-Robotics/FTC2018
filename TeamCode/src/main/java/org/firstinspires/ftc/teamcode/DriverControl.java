@@ -119,15 +119,15 @@ public class DriverControl extends OpMode
 
         // POV Mode uses left stick to go forward, and right stick to turn.
         // - This uses basic math to combine motions and is easier to drive straight.
-        float strafe_y = gamepad1.left_stick_y;
+        float strafe_y = -gamepad1.left_stick_y;
         float strafe_x = gamepad1.left_stick_x;
         float turn  =  gamepad1.right_stick_x;
 
-
-        leftFrontPower    = Range.clip(strafe_y-strafe_x-turn, -1.0, 1.0) ;
-        rightFrontPower   = Range.clip(strafe_y+strafe_x+turn, -1.0, 1.0) ;
-        leftBackPower   = Range.clip(strafe_y+strafe_x-turn, -1.0, 1.0) ;
-        rightBackPower   = Range.clip(strafe_y-strafe_x+turn, -1.0, 1.0) ;
+        //TODO strafing left and right look like they are off by 45 degrees
+        leftFrontPower    = Range.clip(strafe_y+strafe_x+turn, -1.0, 1.0) ;
+        rightFrontPower   = Range.clip(strafe_y-strafe_x-turn, -1.0, 1.0) ;
+        leftBackPower   = Range.clip(strafe_y-strafe_x+turn, -1.0, 1.0) ;
+        rightBackPower   = Range.clip(strafe_y+strafe_x-turn, -1.0, 1.0) ;
 
 
         // Send calculated power to wheels
