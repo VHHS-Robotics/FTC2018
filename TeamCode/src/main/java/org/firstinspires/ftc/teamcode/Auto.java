@@ -65,7 +65,7 @@ public class Auto extends OpMode
 
 
     static final double COUNTS_PER_MOTOR_REV = 280;    // eg: Andymark Motor Encoder
-    static final double DRIVE_GEAR_REDUCTION = 40;     // This is < 1.0 if geared UP
+    static final double DRIVE_GEAR_REDUCTION = 4+(1/6);     // This is < 1.0 if geared UP
     static final double WHEEL_DIAMETER_INCHES = 4.0;     // For figuring circumference
     static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
@@ -97,6 +97,11 @@ public class Auto extends OpMode
         leftBack.setDirection(DcMotor.Direction.FORWARD);
         rightBack.setDirection(DcMotor.Direction.REVERSE);
 
+        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
     }
@@ -116,7 +121,8 @@ public class Auto extends OpMode
         runtime.reset();
 
         //Instructions for the robot
-        move(10,0,0,0);
+        //move(-24,0,0,0);
+        move(0, 24, 0, 0);
 
     }
 
@@ -157,20 +163,20 @@ public class Auto extends OpMode
         int leftFrontNew;
         int leftBackNew;
         int rightFrontNew;
-        int rigthtBackNew;
+        int rightBackNew;
 
         if(strafeY!=0){
             //adding the distance to move in inches to current position
             leftFrontNew = leftFront.getCurrentPosition() + (int) (strafeY * COUNTS_PER_INCH);
             leftBackNew = leftBack.getCurrentPosition() + (int) (strafeY * COUNTS_PER_INCH);
             rightFrontNew = rightFront.getCurrentPosition() + (int) (strafeY * COUNTS_PER_INCH);
-            rigthtBackNew = rightBack.getCurrentPosition() + (int) (strafeY * COUNTS_PER_INCH);
+            rightBackNew = rightBack.getCurrentPosition() + (int) (strafeY * COUNTS_PER_INCH);
 
             //tell motors to move to new position
             leftFront.setTargetPosition(leftFrontNew);
             leftBack.setTargetPosition(leftBackNew);
             rightFront.setTargetPosition(rightFrontNew);
-            rightBack.setTargetPosition(rigthtBackNew);
+            rightBack.setTargetPosition(rightBackNew);
 
             // Assign power to motors
             leftFront.setPower(DRIVE_SPEED);
@@ -179,32 +185,32 @@ public class Auto extends OpMode
             rightBack.setPower(DRIVE_SPEED);
         }
         if(strafeLeft!=0){
-            leftFrontNew = leftFront.getCurrentPosition() + (int) ((strafeY * COUNTS_PER_INCH) * -1);
-            leftBackNew = leftBack.getCurrentPosition() + (int) (strafeY * COUNTS_PER_INCH);
-            rightFrontNew = rightFront.getCurrentPosition() + (int) (strafeY * COUNTS_PER_INCH);
-            rigthtBackNew = rightBack.getCurrentPosition() + (int) ((strafeY * COUNTS_PER_INCH) * -1);
+            leftFrontNew = leftFront.getCurrentPosition() - (int) ((1+(1/3))*strafeLeft * COUNTS_PER_INCH);
+            leftBackNew = leftBack.getCurrentPosition() + (int) ((1+(1/3))*strafeLeft * COUNTS_PER_INCH);
+            rightFrontNew = rightFront.getCurrentPosition() + (int) ((1+(1/3))*strafeLeft * COUNTS_PER_INCH);
+            rightBackNew = rightBack.getCurrentPosition() - (int) ((1+(1/3))*strafeLeft * COUNTS_PER_INCH);
 
             leftFront.setTargetPosition(leftFrontNew);
             leftBack.setTargetPosition(leftBackNew);
             rightFront.setTargetPosition(rightFrontNew);
-            rightBack.setTargetPosition(rigthtBackNew);
+            rightBack.setTargetPosition(rightBackNew);
 
-            leftFront.setPower(DRIVE_SPEED);
-            rightFront.setPower(DRIVE_SPEED);
-            leftBack.setPower(DRIVE_SPEED);
+            leftFront.setPower(DRIVE_SPEED-0.02);
+            rightFront.setPower(DRIVE_SPEED-0.02);
+            leftBack.setPower(DRIVE_SPEED-0.02);
             rightBack.setPower(DRIVE_SPEED);
 
         }
         if(strafeRight!=0){
-            leftFrontNew = leftFront.getCurrentPosition() + (int) (strafeY * COUNTS_PER_INCH);
-            leftBackNew = leftBack.getCurrentPosition() + (int) ((strafeY * COUNTS_PER_INCH) * -1); //multiplying by -1 to spin motor counter-clockwise
-            rightFrontNew = rightFront.getCurrentPosition() + (int) ((strafeY * COUNTS_PER_INCH) * -1);
-            rigthtBackNew = rightBack.getCurrentPosition() + (int) (strafeY * COUNTS_PER_INCH);
+            leftFrontNew = leftFront.getCurrentPosition() + (int) (strafeRight * COUNTS_PER_INCH);
+            leftBackNew = leftBack.getCurrentPosition() - (int) (strafeRight * COUNTS_PER_INCH); //multiplying by -1 to spin motor counter-clockwise
+            rightFrontNew = rightFront.getCurrentPosition() - (int) (strafeRight * COUNTS_PER_INCH);
+            rightBackNew = rightBack.getCurrentPosition() + (int) (strafeRight * COUNTS_PER_INCH);
 
             leftFront.setTargetPosition(leftFrontNew);
             leftBack.setTargetPosition(leftBackNew);
             rightFront.setTargetPosition(rightFrontNew);
-            rightBack.setTargetPosition(rigthtBackNew);
+            rightBack.setTargetPosition(rightBackNew);
 
             leftFront.setPower(DRIVE_SPEED);
             rightFront.setPower(DRIVE_SPEED);

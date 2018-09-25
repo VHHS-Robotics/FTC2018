@@ -76,13 +76,17 @@ public class DriverControl extends OpMode
         leftBack = hardwareMap.get(DcMotor.class, "leftBack");
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
 
-
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
         leftFront.setDirection(DcMotor.Direction.FORWARD);
         rightFront.setDirection(DcMotor.Direction.REVERSE);
         leftBack.setDirection(DcMotor.Direction.FORWARD);
         rightBack.setDirection(DcMotor.Direction.REVERSE);
+
+        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
@@ -129,11 +133,10 @@ public class DriverControl extends OpMode
         leftBackPower   = Range.clip(strafe_y-strafe_x+turn, -1.0, 1.0) ;
         rightBackPower   = Range.clip(strafe_y+strafe_x-turn, -1.0, 1.0) ;
 
-
         // Send calculated power to wheels
-        leftFront.setPower(leftFrontPower);
-        rightFront.setPower(rightFrontPower);
-        leftBack.setPower(leftBackPower);
+        leftFront.setPower(leftFrontPower-0.02);
+        rightFront.setPower(rightFrontPower-0.02);
+        leftBack.setPower(leftBackPower-0.02);
         rightBack.setPower(rightBackPower);
 
         telemetry.addData("leftFrontPower",leftFrontPower);
@@ -147,6 +150,10 @@ public class DriverControl extends OpMode
      */
     @Override
     public void stop() {
+        leftFront.setPower(0);
+        rightFront.setPower(0);
+        leftBack.setPower(0);
+        rightBack.setPower(0);
     }
 
 }
