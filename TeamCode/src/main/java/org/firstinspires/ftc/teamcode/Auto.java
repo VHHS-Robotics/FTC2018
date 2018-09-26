@@ -69,7 +69,7 @@ public class Auto extends OpMode
     static final double WHEEL_DIAMETER_INCHES = 4.0;     // For figuring circumference
     static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
-    static final double DRIVE_SPEED = 1.0;
+    static final double DRIVE_SPEED = 0.5;
     static final double TURN_SPEED = 1.0;
 
 
@@ -122,7 +122,9 @@ public class Auto extends OpMode
 
         //Instructions for the robot
         //move(-24,0,0,0);
-        move(0, 24, 0, 0);
+        //move(0, 24, 0, 0);
+        move(0, 0, 24, 0);
+
 
     }
 
@@ -185,27 +187,27 @@ public class Auto extends OpMode
             rightBack.setPower(DRIVE_SPEED);
         }
         if(strafeLeft!=0){
-            leftFrontNew = leftFront.getCurrentPosition() - (int) ((1+(1/3))*strafeLeft * COUNTS_PER_INCH);
-            leftBackNew = leftBack.getCurrentPosition() + (int) ((1+(1/3))*strafeLeft * COUNTS_PER_INCH);
-            rightFrontNew = rightFront.getCurrentPosition() + (int) ((1+(1/3))*strafeLeft * COUNTS_PER_INCH);
-            rightBackNew = rightBack.getCurrentPosition() - (int) ((1+(1/3))*strafeLeft * COUNTS_PER_INCH);
+            leftFrontNew = leftFront.getCurrentPosition() - (int) (1.25*strafeLeft * COUNTS_PER_INCH);
+            leftBackNew = leftBack.getCurrentPosition() + (int) (1.25*strafeLeft * COUNTS_PER_INCH);
+            rightFrontNew = rightFront.getCurrentPosition() + (int) (1.25*strafeLeft * COUNTS_PER_INCH);
+            rightBackNew = rightBack.getCurrentPosition() - (int) (1.25*strafeLeft * COUNTS_PER_INCH);
 
             leftFront.setTargetPosition(leftFrontNew);
             leftBack.setTargetPosition(leftBackNew);
             rightFront.setTargetPosition(rightFrontNew);
             rightBack.setTargetPosition(rightBackNew);
 
-            leftFront.setPower(DRIVE_SPEED-0.02);
-            rightFront.setPower(DRIVE_SPEED-0.02);
-            leftBack.setPower(DRIVE_SPEED-0.02);
+            leftFront.setPower(DRIVE_SPEED);
+            rightFront.setPower(DRIVE_SPEED);
+            leftBack.setPower(DRIVE_SPEED);
             rightBack.setPower(DRIVE_SPEED);
 
         }
         if(strafeRight!=0){
-            leftFrontNew = leftFront.getCurrentPosition() + (int) (strafeRight * COUNTS_PER_INCH);
-            leftBackNew = leftBack.getCurrentPosition() - (int) (strafeRight * COUNTS_PER_INCH); //multiplying by -1 to spin motor counter-clockwise
-            rightFrontNew = rightFront.getCurrentPosition() - (int) (strafeRight * COUNTS_PER_INCH);
-            rightBackNew = rightBack.getCurrentPosition() + (int) (strafeRight * COUNTS_PER_INCH);
+            leftFrontNew = leftFront.getCurrentPosition() + (int) (1.25*strafeRight * COUNTS_PER_INCH);
+            leftBackNew = leftBack.getCurrentPosition() - (int) (1.25*strafeRight * COUNTS_PER_INCH); //multiplying by -1 to spin motor counter-clockwise
+            rightFrontNew = rightFront.getCurrentPosition() - (int) (1.25*strafeRight * COUNTS_PER_INCH);
+            rightBackNew = rightBack.getCurrentPosition() + (int) (1.25*strafeRight * COUNTS_PER_INCH);
 
             leftFront.setTargetPosition(leftFrontNew);
             leftBack.setTargetPosition(leftBackNew);
@@ -219,9 +221,19 @@ public class Auto extends OpMode
 
         }
 
-        while(leftFront.isBusy()){
-            //nothing
+        while(leftFront.isBusy()) {
+            telemetry.addData("LeftFontPosition", leftFront.getCurrentPosition());
+            telemetry.addData("leftBackPosition", leftBack.getCurrentPosition());
+            telemetry.addData("RightFontPosition", rightFront.getCurrentPosition());
+            telemetry.addData("rightBackPosition", rightBack.getCurrentPosition());
+            telemetry.update();
         }
+
+        telemetry.addData("LeftFontPosition", leftFront.getCurrentPosition());
+        telemetry.addData("leftBackPosition", leftBack.getCurrentPosition());
+        telemetry.addData("RightFontPosition", rightFront.getCurrentPosition());
+        telemetry.addData("rightBackPosition", rightBack.getCurrentPosition());
+        telemetry.update();
 
         stopMotors();
     }

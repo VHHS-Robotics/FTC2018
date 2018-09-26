@@ -127,17 +127,17 @@ public class DriverControl extends OpMode
         float strafe_x = gamepad1.left_stick_x;
         float turn  =  gamepad1.right_stick_x;
 
-        //TODO strafing left and right look like they are off by 45 degrees
         leftFrontPower    = Range.clip(strafe_y+strafe_x+turn, -1.0, 1.0) ;
         rightFrontPower   = Range.clip(strafe_y-strafe_x-turn, -1.0, 1.0) ;
         leftBackPower   = Range.clip(strafe_y-strafe_x+turn, -1.0, 1.0) ;
         rightBackPower   = Range.clip(strafe_y+strafe_x-turn, -1.0, 1.0) ;
 
         // Send calculated power to wheels
-        leftFront.setPower(leftFrontPower-0.02);
-        rightFront.setPower(rightFrontPower-0.02);
-        leftBack.setPower(leftBackPower-0.02);
+        leftFront.setPower(leftFrontPower);
+        rightFront.setPower(rightFrontPower);
+        leftBack.setPower(leftBackPower);
         rightBack.setPower(rightBackPower);
+
 
         telemetry.addData("leftFrontPower",leftFrontPower);
         telemetry.addData("rightFrontPower",rightFrontPower);
