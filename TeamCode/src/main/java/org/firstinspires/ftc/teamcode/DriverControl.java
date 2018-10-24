@@ -32,8 +32,10 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -60,6 +62,23 @@ public class DriverControl extends OpMode
     private DcMotor rightFront = null;
     private DcMotor leftBack = null;
     private DcMotor rightBack = null;
+    private CRServo rightServo;
+    private CRServo leftServo;
+    private DcMotor liftMotor;
+    private Servo liftServo;
+    private CRServo conveyorBelt;
+    int loopnum = 0;
+
+//    private DcMotor intakeExtend;
+//    private DcMotor scoringExtend;
+//    private DcMotor extendTilt;
+
+    boolean upOrDown = false;
+
+    //private static final double     COUNTS_PER_MOTOR_REV    = 1680 ;    // Motor Encoder
+    //private static final double     AXLE_DIAMETER_INCHES   = 2.0 ;     // For figuring circumference
+    //private static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV ) / (AXLE_DIAMETER_INCHES * Math.PI);
+
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -76,12 +95,34 @@ public class DriverControl extends OpMode
         leftBack = hardwareMap.get(DcMotor.class, "leftBack");
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
 
+        // servos used for collecting minerals
+        rightServo = hardwareMap.get(CRServo.class, "rightServo");
+        leftServo = hardwareMap.get(CRServo.class, "leftServo");
+
+        //motor and servo used for lifting and lowering robot
+        liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
+        liftServo = hardwareMap.get(Servo.class, "liftServo");
+        liftServo.setPosition(0.0975);
+
+        conveyorBelt = hardwareMap.get(CRServo.class, "conveyorBelt");
+
+        //enables encoder method (Hurray for superfluous code!)
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
         leftFront.setDirection(DcMotor.Direction.FORWARD);
         rightFront.setDirection(DcMotor.Direction.REVERSE);
         leftBack.setDirection(DcMotor.Direction.FORWARD);
         rightBack.setDirection(DcMotor.Direction.REVERSE);
+
+        liftMotor.setDirection(DcMotor.Direction.REVERSE);
+        enableEncoders();
+
+        /*
+        intakeExtend.setDirection(DcMotor.Direction.FORWARD);
+        //work together
+        scoringExtend.setDirection(DcMotor.Direction.FORWARD);
+        extendTilt.setDirection(DcMotor.Direction.FORWARD);
+        */
 
         leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -126,11 +167,76 @@ public class DriverControl extends OpMode
         float strafe_y = -gamepad1.left_stick_y;
         float strafe_x = gamepad1.left_stick_x;
         float turn  =  gamepad1.right_stick_x;
+        boolean liftTilt = gamepad1.y;
+        boolean liftRobot = gamepad1.dpad_up;
+        boolean dropRobot = gamepad1.dpad_down;
 
         leftFrontPower    = Range.clip(strafe_y+strafe_x+turn, -1.0, 1.0) ;
         rightFrontPower   = Range.clip(strafe_y-strafe_x-turn, -1.0, 1.0) ;
         leftBackPower   = Range.clip(strafe_y-strafe_x+turn, -1.0, 1.0) ;
         rightBackPower   = Range.clip(strafe_y+strafe_x-turn, -1.0, 1.0) ;
+
+
+        //Intake servo control
+        if(gamepad1.a)
+            leftServo.setPower(1);
+            rightServo.setPower(-0.75);
+        if(gamepad1.b)
+            leftServo.setPower(-1);
+            rightServo.setPower(0.75);
+        if(!gamepad1.b && !gamepad1.a)
+            leftServo.setPower(0);
+            rightServo.setPower(0);
+
+        //lifting and dropping robot
+        if (liftRobot && !upOrDown) {
+            liftServo.setPosition(.23);
+            liftMotor.setTargetPosition(11000);
+            liftMotor.setPower(1);
+            upOrDown = true;
+        }
+        if (dropRobot && upOrDown) {
+            liftServo.setPosition(0.0975);
+            liftMotor.setTargetPosition(0);
+            liftMotor.setPower(1);
+            upOrDown = false;
+        }
+        if(Math.abs(liftMotor.getCurrentPosition()) > Math.abs(liftMotor.getTargetPosition()) && upOrDown){
+            liftMotor.setPower(0.0);
+        }
+        if(Math.abs(liftMotor.getCurrentPosition()) < Math.abs(liftMotor.getTargetPosition()) && !upOrDown){
+            liftMotor.setPower(0.0);
+        }
+
+
+        //manual lift
+        if (gamepad1.dpad_left){
+            liftMotor.setPower(-1);
+        }
+        else if (gamepad1.dpad_right){
+            liftMotor.setPower(1);
+        }
+        if (gamepad1.left_bumper)
+            liftMotor.setPower(0);
+
+
+        // conveyor control
+        if(gamepad1.x)
+            conveyorBelt.setPower(1);
+        if(gamepad1.y)
+            conveyorBelt.setPower(-1);
+        if(!gamepad1.y && !gamepad1.x)
+            conveyorBelt.setPower(0);
+//        if(liftTilt){
+//            ++toggleTwo;
+//            if(toggleTwo % 2 == 0){
+//                //encoder limit here
+//                scoringExtend.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//
+//                scoringExtend.setTargetPosition(scoringExtend.getCurrentPosition()+(int)());
+//            }else if(toggleTwo % 2 != 0){
+//                //here too
+//        }
 
         // Send calculated power to wheels
         leftFront.setPower(leftFrontPower);
@@ -138,11 +244,6 @@ public class DriverControl extends OpMode
         leftBack.setPower(leftBackPower);
         rightBack.setPower(rightBackPower);
 
-
-        telemetry.addData("leftFrontPower",leftFrontPower);
-        telemetry.addData("rightFrontPower",rightFrontPower);
-        telemetry.addData("leftBackPower",leftBackPower);
-        telemetry.addData("rightBackPower",rightBackPower);
     }
 
     /*
@@ -154,6 +255,14 @@ public class DriverControl extends OpMode
         rightFront.setPower(0);
         leftBack.setPower(0);
         rightBack.setPower(0);
+    }
+
+    public void enableEncoders(){
+        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    }
+    public void disableEncoders(){
+        liftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
 }

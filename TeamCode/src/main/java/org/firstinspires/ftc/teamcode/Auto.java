@@ -29,13 +29,12 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 import java.util.*;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
@@ -53,8 +52,10 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
+// Roman is my extraterrestrial cat -Luis
+
 @Autonomous(name="AutoControl", group="Iterative Opmode")
-public class Auto extends OpMode
+public class Auto extends LinearOpMode
 {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
@@ -62,23 +63,20 @@ public class Auto extends OpMode
     private DcMotor rightFront = null;
     private DcMotor leftBack = null;
     private DcMotor rightBack = null;
+    private DcMotor liftMotor;
+    private Servo liftServo;
 
 
     static final double COUNTS_PER_MOTOR_REV = 280;    // eg: Andymark Motor Encoder
+    static final double COUNTS_PER_MOTOR_REV_60 = 420;    // eg: Andymark Motor Encoder
     static final double DRIVE_GEAR_REDUCTION = 4+(1/6);     // This is < 1.0 if geared UP
     static final double WHEEL_DIAMETER_INCHES = 4.0;     // For figuring circumference
     static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
     static final double DRIVE_SPEED = 0.5;
-    static final double TURN_SPEED = 1.0;
 
-
-
-    /*
-     * Code to run ONCE when the driver hits INIT
-     */
     @Override
-    public void init() {
+    public void runOpMode() {
         telemetry.addData("Status", "Initialized");
 
         // Initialize the hardware variables. Note that the strings used here as parameters
@@ -89,6 +87,10 @@ public class Auto extends OpMode
         leftBack = hardwareMap.get(DcMotor.class, "leftBack");
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
 
+        liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
+        liftMotor.setDirection(DcMotor.Direction.REVERSE);
+        liftServo = hardwareMap.get(Servo.class, "liftServo");
+        liftServo.setPosition(0.0975);
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -104,64 +106,61 @@ public class Auto extends OpMode
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
-    }
 
-    /*
-     * Code to run REPEATEDLY after the driver hits INIT, but before they hit PLAY
-     */
-    @Override
-    public void init_loop() {
-    }
-
-    /*
-     * Code to run ONCE when the driver hits PLAY
-     */
-    @Override
-    public void start() {
+        waitForStart();
         runtime.reset();
+        boolean runOnce = true;
 
-        //Instructions for the robot
-        //move(-24,0,0,0);
-        //move(0, 24, 0, 0);
-        move(0, 0, 24, 0);
+        while (opModeIsActive()&& runOnce){
+            enableEncoders();
 
 
-    }
+            //Instructions for the robot
+            dropAuto();
+            move(0,3,0);
 
-    public void move2(double angle, float distance, float rotation){
-        resetEncoder();
-        runWithEncoder();
 
-        int leftFrontNew ;
-        int leftBackNew;
-        int rightFrontNew;
-        int rigthtBackNew;
+            //Move forward towards minerals
+            move(24,0,0);
 
-        leftFrontNew = leftFront.getCurrentPosition() + (int) (distance*Math.sin(angle-45) * COUNTS_PER_INCH);
-        leftBackNew = leftBack.getCurrentPosition() + (int) (distance*Math.sin(angle+45) * COUNTS_PER_INCH);
-        rightFrontNew = rightFront.getCurrentPosition() + (int) (distance*Math.sin(angle+45) * COUNTS_PER_INCH);
-        rigthtBackNew = rightBack.getCurrentPosition() + (int) (distance*Math.sin(angle-45) * COUNTS_PER_INCH);
+            liftAuto();
 
-        leftFront.setTargetPosition(leftFrontNew);
-        leftBack.setTargetPosition(leftBackNew);
-        rightFront.setTargetPosition(rightFrontNew);
-        rightBack.setTargetPosition(rigthtBackNew);
+            //check mineral colors
+            int randomColor = 0;//(int) Math.round(Math.random()*2);
+            //knock the gold, move into depot, drop marker, back out
+            switch(randomColor){
+                case 0: move(0,4,0); //right
+                        move(18, 0,45 );
+                        move(18, 0, 0);
 
-        leftFront.setPower(DRIVE_SPEED);
-        rightFront.setPower(DRIVE_SPEED);
-        leftBack.setPower(DRIVE_SPEED);
-        rightBack.setPower(DRIVE_SPEED);
+                        move(-18, 0,0);
+                        move(-18,0,-45);
+                        move(0,-4, 0);
+                        break;
+                case 1: move(0,-4,0); //middle
+                        move(30, 0, 0);
 
-        while(leftFront.isBusy()){
-            //nothing
+                        move(-30, 0 ,0);
+                        move(0,-4, 0);
+                        break;
+                case 2: move(0,-11,0); //left
+                        move(18, 0,-45 );
+                        move(18, 0, 0);
+
+                        move(-18, 0,0);
+                        move(-18,0,45);
+                        move(0,11, 0);
+                        break;
+            }
+
+
+            //move into crater
+
+            runOnce = false;
         }
-        stopMotors();
     }
 
-    public void move(float strafeY,float strafeLeft, float strafeRight, float turn){
-        resetEncoder();
-        runWithEncoder();
-
+    public void move(float strafeY,float strafeX, float turn){
         int leftFrontNew;
         int leftBackNew;
         int rightFrontNew;
@@ -174,52 +173,26 @@ public class Auto extends OpMode
             rightFrontNew = rightFront.getCurrentPosition() + (int) (strafeY * COUNTS_PER_INCH);
             rightBackNew = rightBack.getCurrentPosition() + (int) (strafeY * COUNTS_PER_INCH);
 
-            //tell motors to move to new position
-            leftFront.setTargetPosition(leftFrontNew);
-            leftBack.setTargetPosition(leftBackNew);
-            rightFront.setTargetPosition(rightFrontNew);
-            rightBack.setTargetPosition(rightBackNew);
-
-            // Assign power to motors
-            leftFront.setPower(DRIVE_SPEED);
-            rightFront.setPower(DRIVE_SPEED);
-            leftBack.setPower(DRIVE_SPEED);
-            rightBack.setPower(DRIVE_SPEED);
+            movePos(leftFrontNew, leftBackNew, rightFrontNew, rightBackNew);
         }
-        if(strafeLeft!=0){
-            leftFrontNew = leftFront.getCurrentPosition() - (int) (1.25*strafeLeft * COUNTS_PER_INCH);
-            leftBackNew = leftBack.getCurrentPosition() + (int) (1.25*strafeLeft * COUNTS_PER_INCH);
-            rightFrontNew = rightFront.getCurrentPosition() + (int) (1.25*strafeLeft * COUNTS_PER_INCH);
-            rightBackNew = rightBack.getCurrentPosition() - (int) (1.25*strafeLeft * COUNTS_PER_INCH);
+        if(strafeX!=0){
+            leftFrontNew = leftFront.getCurrentPosition() + (int) (1.25*strafeX * COUNTS_PER_INCH);
+            leftBackNew = leftBack.getCurrentPosition() - (int) (1.25*strafeX * COUNTS_PER_INCH);
+            rightFrontNew = rightFront.getCurrentPosition() - (int) (1.25*strafeX * COUNTS_PER_INCH);
+            rightBackNew = rightBack.getCurrentPosition() + (int) (1.25*strafeX * COUNTS_PER_INCH);
 
-            leftFront.setTargetPosition(leftFrontNew);
-            leftBack.setTargetPosition(leftBackNew);
-            rightFront.setTargetPosition(rightFrontNew);
-            rightBack.setTargetPosition(rightBackNew);
-
-            leftFront.setPower(DRIVE_SPEED);
-            rightFront.setPower(DRIVE_SPEED);
-            leftBack.setPower(DRIVE_SPEED);
-            rightBack.setPower(DRIVE_SPEED);
-
+            movePos(leftFrontNew, leftBackNew, rightFrontNew, rightBackNew);
         }
-        if(strafeRight!=0){
-            leftFrontNew = leftFront.getCurrentPosition() + (int) (1.25*strafeRight * COUNTS_PER_INCH);
-            leftBackNew = leftBack.getCurrentPosition() - (int) (1.25*strafeRight * COUNTS_PER_INCH); //multiplying by -1 to spin motor counter-clockwise
-            rightFrontNew = rightFront.getCurrentPosition() - (int) (1.25*strafeRight * COUNTS_PER_INCH);
-            rightBackNew = rightBack.getCurrentPosition() + (int) (1.25*strafeRight * COUNTS_PER_INCH);
+        if(turn!=0){
+            leftFrontNew = leftFront.getCurrentPosition() - (int) Math.round((Math.PI*12.5*turn)/180*COUNTS_PER_INCH) ;
+            leftBackNew = leftBack.getCurrentPosition() - (int) Math.round((Math.PI*12.5*turn)/180*COUNTS_PER_INCH);
+            rightFrontNew = rightFront.getCurrentPosition() + (int) Math.round((Math.PI*12.5*turn)/180*COUNTS_PER_INCH);
+            rightBackNew = rightBack.getCurrentPosition() + (int) Math.round((Math.PI*12.5*turn)/180*COUNTS_PER_INCH);
 
-            leftFront.setTargetPosition(leftFrontNew);
-            leftBack.setTargetPosition(leftBackNew);
-            rightFront.setTargetPosition(rightFrontNew);
-            rightBack.setTargetPosition(rightBackNew);
-
-            leftFront.setPower(DRIVE_SPEED);
-            rightFront.setPower(DRIVE_SPEED);
-            leftBack.setPower(DRIVE_SPEED);
-            rightBack.setPower(DRIVE_SPEED);
-
+            movePos(leftFrontNew, leftBackNew, rightFrontNew, rightBackNew);
         }
+
+
 
         while(leftFront.isBusy()) {
             telemetry.addData("LeftFontPosition", leftFront.getCurrentPosition());
@@ -227,48 +200,55 @@ public class Auto extends OpMode
             telemetry.addData("RightFontPosition", rightFront.getCurrentPosition());
             telemetry.addData("rightBackPosition", rightBack.getCurrentPosition());
             telemetry.update();
+            Thread.yield();
         }
-
-        telemetry.addData("LeftFontPosition", leftFront.getCurrentPosition());
-        telemetry.addData("leftBackPosition", leftBack.getCurrentPosition());
-        telemetry.addData("RightFontPosition", rightFront.getCurrentPosition());
-        telemetry.addData("rightBackPosition", rightBack.getCurrentPosition());
-        telemetry.update();
 
         stopMotors();
     }
+    public void movePos(int leftFrontNew, int leftBackNew, int rightFrontNew, int rightBackNew){
+        leftFront.setTargetPosition(leftFrontNew);
+        leftBack.setTargetPosition(leftBackNew);
+        rightFront.setTargetPosition(rightFrontNew);
+        rightBack.setTargetPosition(rightBackNew);
 
-    /*
-     * Code to run REPEATEDLY after the driver hits PLAY but before they hit STOP
-     */
-    @Override
-    public void loop() {
-        // Setup a variable for each drive wheel to save power level for telemetry
-
+        leftFront.setPower(DRIVE_SPEED);
+        rightFront.setPower(DRIVE_SPEED);
+        leftBack.setPower(DRIVE_SPEED);
+        rightBack.setPower(DRIVE_SPEED);
     }
 
-    /*
-     * Code to run ONCE after the driver hits STOP
-     */
-    @Override
-    public void stop() {
-
+    public void dropAuto(){
+            liftServo.setPosition(.23);
+            liftMotor.setTargetPosition(11000);
+            liftMotor.setPower(1);
+            while (liftMotor.isBusy()) {
+                telemetry.addData("Lift", "Up");
+                telemetry.update();
+                Thread.yield();
+            }
+            liftMotor.setPower(0.0);
+    }
+    public void liftAuto(){
+        liftServo.setPosition(0.0975);
+        liftMotor.setTargetPosition(0);
+        liftMotor.setPower(1);
+        while (liftMotor.isBusy()) {
+            telemetry.addData("Lift", "Down");
+            telemetry.update();
+            Thread.yield();
+        }
+        liftMotor.setPower(0.0);
     }
 
 
-    public void resetEncoder() {
+    public void enableEncoders(){
         leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-    }
+        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-    public void runWithEncoder() {
-        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
+        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
