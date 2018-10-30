@@ -30,7 +30,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -40,8 +40,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 @TeleOp(name="DriverControl", group="Iterative Opmode")
-public class DriverControl extends OpMode
-{
+public class DriverControl extends LinearOpMode {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotor leftFront = null;
@@ -52,7 +51,7 @@ public class DriverControl extends OpMode
     private CRServo leftServo;
     private DcMotor liftMotor;
     private Servo liftServo;
-    private CRServo conveyorBelt;
+    //private CRServo conveyorBelt;
     int loopnum = 0;
 
 //    private DcMotor intakeExtend;
@@ -70,13 +69,13 @@ public class DriverControl extends OpMode
      * Code to run ONCE when the driver hits INIT
      */
     @Override
-    public void init() {
+    public void runOpMode() {
         telemetry.addData("Status", "Initialized");
 
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        leftFront  = hardwareMap.get(DcMotor.class, "leftFront");
+        leftFront = hardwareMap.get(DcMotor.class, "leftFront");
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
         leftBack = hardwareMap.get(DcMotor.class, "leftBack");
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
@@ -90,7 +89,7 @@ public class DriverControl extends OpMode
         liftServo = hardwareMap.get(Servo.class, "liftServo");
         liftServo.setPosition(0.0975);
 
-        conveyorBelt = hardwareMap.get(CRServo.class, "conveyorBelt");
+        //conveyorBelt = hardwareMap.get(CRServo.class, "conveyorBelt");
 
         //enables encoder method (Hurray for superfluous code!)
         // Most robots need the motor on one side to be reversed to drive forward
@@ -117,102 +116,82 @@ public class DriverControl extends OpMode
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
-    }
 
-    /*
-     * Code to run REPEATEDLY after the driver hits INIT, but before they hit PLAY
-     */
-    @Override
-    public void init_loop() {
-    }
-
-    /*
-     * Code to run ONCE when the driver hits PLAY
-     */
-    @Override
-    public void start() {
+        waitForStart();
         runtime.reset();
-    }
+        while (opModeIsActive()) {
+            double leftFrontPower;
+            double rightFrontPower;
+            double leftBackPower;
+            double rightBackPower;
 
-    /*
-     * Code to run REPEATEDLY after the driver hits PLAY but before they hit STOP
-     */
-    @Override
-    public void loop() {
-        // Setup a variable for each drive wheel to save power level for telemetry
-        double leftFrontPower;
-        double rightFrontPower;
-        double leftBackPower;
-        double rightBackPower;
+            // Choose to drive using either Tank Mode, or POV Mode
+            // Comment out the method that's not used.  The default below is POV.
 
-        // Choose to drive using either Tank Mode, or POV Mode
-        // Comment out the method that's not used.  The default below is POV.
+            // POV Mode uses left stick to go forward, and right stick to turn.
+            // - This uses basic math to combine motions and is easier to drive straight.
+            float strafe_y = -gamepad1.left_stick_y;
+            float strafe_x = gamepad1.left_stick_x;
+            float turn = gamepad1.right_stick_x;
+            boolean liftTilt = gamepad1.y;
+            boolean liftRobot = gamepad1.dpad_up;
+            boolean dropRobot = gamepad1.dpad_down;
 
-        // POV Mode uses left stick to go forward, and right stick to turn.
-        // - This uses basic math to combine motions and is easier to drive straight.
-        float strafe_y = -gamepad1.left_stick_y;
-        float strafe_x = gamepad1.left_stick_x;
-        float turn  =  gamepad1.right_stick_x;
-        boolean liftTilt = gamepad1.y;
-        boolean liftRobot = gamepad1.dpad_up;
-        boolean dropRobot = gamepad1.dpad_down;
-
-        leftFrontPower    = Range.clip(strafe_y+strafe_x+turn, -1.0, 1.0) ;
-        rightFrontPower   = Range.clip(strafe_y-strafe_x-turn, -1.0, 1.0) ;
-        leftBackPower   = Range.clip(strafe_y-strafe_x+turn, -1.0, 1.0) ;
-        rightBackPower   = Range.clip(strafe_y+strafe_x-turn, -1.0, 1.0) ;
+            leftFrontPower = Range.clip(strafe_y + strafe_x + turn, -1.0, 1.0);
+            rightFrontPower = Range.clip(strafe_y - strafe_x - turn, -1.0, 1.0);
+            leftBackPower = Range.clip(strafe_y - strafe_x + turn, -1.0, 1.0);
+            rightBackPower = Range.clip(strafe_y + strafe_x - turn, -1.0, 1.0);
 
 
-        //Intake servo control
-        if(gamepad1.a)
-            leftServo.setPower(1);
+            //Intake servo control
+            if (gamepad1.a)
+                leftServo.setPower(1);
             rightServo.setPower(-0.75);
-        if(gamepad1.b)
-            leftServo.setPower(-1);
+            if (gamepad1.b)
+                leftServo.setPower(-1);
             rightServo.setPower(0.75);
-        if(!gamepad1.b && !gamepad1.a)
-            leftServo.setPower(0);
+            if (!gamepad1.b && !gamepad1.a)
+                leftServo.setPower(0);
             rightServo.setPower(0);
 
-        //lifting and dropping robot
-        if (liftRobot && !upOrDown) {
-            liftServo.setPosition(.23);
-            liftMotor.setTargetPosition(11000);
-            liftMotor.setPower(1);
-            upOrDown = true;
-        }
-        if (dropRobot && upOrDown) {
-            liftServo.setPosition(0.0975);
-            liftMotor.setTargetPosition(0);
-            liftMotor.setPower(1);
-            upOrDown = false;
-        }
-        if(Math.abs(liftMotor.getCurrentPosition()) > Math.abs(liftMotor.getTargetPosition()) && upOrDown){
-            liftMotor.setPower(0.0);
-        }
-        if(Math.abs(liftMotor.getCurrentPosition()) < Math.abs(liftMotor.getTargetPosition()) && !upOrDown){
-            liftMotor.setPower(0.0);
-        }
+            //lifting and dropping robot
+            if (liftRobot && !upOrDown) {
+                liftServo.setPosition(.23);
+                liftMotor.setTargetPosition(11000);
+                liftMotor.setPower(1);
+                upOrDown = true;
+            }
+            if (dropRobot && upOrDown) {
+                liftServo.setPosition(0.0975);
+                liftMotor.setTargetPosition(0);
+                liftMotor.setPower(1);
+                upOrDown = false;
+            }
+            if (Math.abs(liftMotor.getCurrentPosition()) > Math.abs(liftMotor.getTargetPosition()) && upOrDown) {
+                liftMotor.setPower(0.0);
+            }
+            if (Math.abs(liftMotor.getCurrentPosition()) < Math.abs(liftMotor.getTargetPosition()) && !upOrDown) {
+                liftMotor.setPower(0.0);
+            }
 
 
-        //manual lift
-        if (gamepad1.dpad_left){
-            liftMotor.setPower(-1);
-        }
-        else if (gamepad1.dpad_right){
-            liftMotor.setPower(1);
-        }
-        if (gamepad1.left_bumper)
-            liftMotor.setPower(0);
+            //manual lift
+            if (gamepad1.dpad_left) {
+                liftMotor.setPower(-1);
+            } else if (gamepad1.dpad_right) {
+                liftMotor.setPower(1);
+            }
+            if (gamepad1.left_bumper)
+                liftMotor.setPower(0);
 
 
-        // conveyor control
-        if(gamepad1.x)
-            conveyorBelt.setPower(1);
-        if(gamepad1.y)
-            conveyorBelt.setPower(-1);
-        if(!gamepad1.y && !gamepad1.x)
-            conveyorBelt.setPower(0);
+            // conveyor control
+            /*if(gamepad1.x)
+                conveyorBelt.setPower(1);
+            if(gamepad1.y)
+                conveyorBelt.setPower(-1);
+            if(!gamepad1.y && !gamepad1.x)
+                conveyorBelt.setPower(0);
 //        if(liftTilt){
 //            ++toggleTwo;
 //            if(toggleTwo % 2 == 0){
@@ -222,21 +201,14 @@ public class DriverControl extends OpMode
 //                scoringExtend.setTargetPosition(scoringExtend.getCurrentPosition()+(int)());
 //            }else if(toggleTwo % 2 != 0){
 //                //here too
-//        }
-
-        // Send calculated power to wheels
-        leftFront.setPower(leftFrontPower);
-        rightFront.setPower(rightFrontPower);
-        leftBack.setPower(leftBackPower);
-        rightBack.setPower(rightBackPower);
-
-    }
-
-    /*
-     * Code to run ONCE after the driver hits STOP
-     */
-    @Override
-    public void stop() {
+       }
+*/
+            // Send calculated power to wheels
+            leftFront.setPower(leftFrontPower);
+            rightFront.setPower(rightFrontPower);
+            leftBack.setPower(leftBackPower);
+            rightBack.setPower(rightBackPower);
+        }
         leftFront.setPower(0);
         rightFront.setPower(0);
         leftBack.setPower(0);
