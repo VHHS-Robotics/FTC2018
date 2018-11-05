@@ -87,6 +87,8 @@ public class DriverControl extends LinearOpMode {
         //motor and servo used for lifting and lowering robot
         liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
         liftServo = hardwareMap.get(Servo.class, "liftServo");
+
+        liftServo.setDirection(Servo.Direction.FORWARD);
         liftServo.setPosition(0.0975);
 
         //conveyorBelt = hardwareMap.get(CRServo.class, "conveyorBelt");

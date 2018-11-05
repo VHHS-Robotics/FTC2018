@@ -29,28 +29,32 @@
 
 package org.firstinspires.ftc.teamcode;
 
-
+import com.disnodeteam.dogecv.CameraViewDisplay;
+import com.disnodeteam.dogecv.DogeCV;
+import com.disnodeteam.dogecv.detectors.roverrukus.GoldAlignDetector;
+import com.disnodeteam.dogecv.detectors.roverrukus.SamplingOrderDetector;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import java.util.*;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
-// Roman is my extraterrestrial cat -Luis
-
-@Autonomous(name="AutoControl", group="Iterative Opmode")
-public class Auto extends LinearOpMode
+@TeleOp(name="GoldAlign Testing", group="DogeCV")
+public class GoldAlignTesting extends LinearOpMode
 {
-    // Declare OpMode members.
+    // Detector object
     private ElapsedTime runtime = new ElapsedTime();
+    private GoldAlignDetector detector;
+
+    //Motor testing statements
     private DcMotor leftFront = null;
     private DcMotor rightFront = null;
     private DcMotor leftBack = null;
     private DcMotor rightBack = null;
-    private DcMotor liftMotor;
-    private Servo liftServo;
+
+    int leftFrontNew;
+    int leftBackNew;
+    int rightFrontNew;
+    int rightBackNew;
 
 
     static final double COUNTS_PER_MOTOR_REV = 280;    // eg: Andymark Motor Encoder
@@ -61,22 +65,14 @@ public class Auto extends LinearOpMode
             (WHEEL_DIAMETER_INCHES * 3.1415);
     static final double DRIVE_SPEED = 0.5;
 
+
     @Override
     public void runOpMode() {
-        telemetry.addData("Status", "Initialized");
-
-        // Initialize the hardware variables. Note that the strings used here as parameters
-        // to 'get' must correspond to the names assigned during the robot configuration
-        // step (using the FTC Robot Controller app on the phone).
+        //mapping for movement
         leftFront  = hardwareMap.get(DcMotor.class, "leftFront");
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
         leftBack = hardwareMap.get(DcMotor.class, "leftBack");
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
-
-        liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
-        liftMotor.setDirection(DcMotor.Direction.REVERSE);
-        liftServo = hardwareMap.get(Servo.class, "liftServo");
-        liftServo.setPosition(0.0975);
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -90,71 +86,72 @@ public class Auto extends LinearOpMode
         leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // Tell the driver that initialization is complete.
-        telemetry.addData("Status", "Initialized");
+
+        telemetry.addData("Status", "DogeCV 2018.0 - Gold Align Example");
+
+        // Set up detector
+        detector = new GoldAlignDetector(); // Create detector
+        detector.init(hardwareMap.appContext, CameraViewDisplay.getInstance()); // Initialize it with the app context and camera
+        detector.useDefaults(); // Set detector to use default settings
+
+        // Optional tuning
+        detector.alignSize = 100
+        ; // How wide (in pixels) is the range in which the gold object will be aligned. (Represented by green bars in the preview)
+        detector.alignPosOffset = 0; // How far from center frame to offset this alignment zone.
+        detector.downscale = 0.4; // How much to downscale the input frames
+
+        detector.areaScoringMethod = DogeCV.AreaScoringMethod.MAX_AREA; // Can also be PERFECT_AREA
+        //detector.perfectAreaScorer.perfectArea = 10000; // if using PERFECT_AREA scoring
+        detector.maxAreaScorer.weight = 0.005; //
+
+        detector.ratioScorer.weight = 5; //
+        detector.ratioScorer.perfectRatio = 1.0; // Ratio adjustment
+
+        detector.enable(); // Start the detector!
+
+        enableEncoders(); //enable the encoders
 
         waitForStart();
         runtime.reset();
         boolean runOnce = true;
+        while(opModeIsActive() && runOnce){
+            telemetry.addData("IsAligned", detector.getAligned()); // Is the bot aligned with the gold mineral?
+            telemetry.addData("Y Pos", detector.getYPosistion()); // Gold Y position.
+            telemetry.update();
 
-        while (opModeIsActive()&& runOnce){
-            enableEncoders();
-
-
-
-            //Instructions for the robot
-            dropAuto();
-            move(0,3,0);
-
-
-            //Move forward towards minerals
-            move(24,0,0);
-
-            liftAuto();
-
-            //check mineral colors
-            int randomColor = 0;//(int) Math.round(Math.random()*2);
-            //knock the gold, move into depot, drop marker, back out
-            switch(randomColor){
-                case 0: move(0,4,0); //right
-                        move(18, 0,45 );
-                        move(18, 0, 0);
-
-                        move(-18, 0,0);
-                        move(-18,0,-45);
-                        move(0,-4, 0);
-                        break;
-                case 1: move(0,-4,0); //middle
-                        move(30, 0, 0);
-
-                        move(-30, 0 ,0);
-                        move(0,-4, 0);
-                        break;
-                case 2: move(0,-11,0); //left
-                        move(18, 0,-45 );
-                        move(18, 0, 0);
-
-                        move(-18, 0,0);
-                        move(-18,0,45);
-                        move(0,11, 0);
-                        break;
+            //after dropping
+            if (detector.isFound()){
+                //If we can see the gold after dropping
+                while(!detector.getAligned()){
+                    if (detector.getYPosistion() < detector.getCenter()){
+                        //move left
+                        move(0, -2, 0);
+                    }
+                    else{
+                        //move right
+                        move(0, 2,0);
+                    }
+                }
+                //now we are aligned. Go hit it.
+                move(5, 0, 0);
             }
+            else{//we know it is the third mineral
+                //go to it and hit it
+                move(5, 0, 0);
+            }
+            detector.disable();
 
-            //move into crater
 
-
-            //Make sure this code does not repeat
             runOnce = false;
         }
     }
-
-    public void move(float strafeY,float strafeX, float turn){
+    public void move(float strafeY,float strafeX, float turn) {
         int leftFrontNew;
         int leftBackNew;
         int rightFrontNew;
         int rightBackNew;
 
-        if(strafeY!=0){
+        if (strafeY != 0) {
             //adding the distance to move in inches to current position
             leftFrontNew = leftFront.getCurrentPosition() + (int) (strafeY * COUNTS_PER_INCH);
             leftBackNew = leftBack.getCurrentPosition() + (int) (strafeY * COUNTS_PER_INCH);
@@ -163,26 +160,25 @@ public class Auto extends LinearOpMode
 
             movePos(leftFrontNew, leftBackNew, rightFrontNew, rightBackNew);
         }
-        if(strafeX!=0){
-            leftFrontNew = leftFront.getCurrentPosition() + (int) (1.25*strafeX * COUNTS_PER_INCH);
-            leftBackNew = leftBack.getCurrentPosition() - (int) (1.25*strafeX * COUNTS_PER_INCH);
-            rightFrontNew = rightFront.getCurrentPosition() - (int) (1.25*strafeX * COUNTS_PER_INCH);
-            rightBackNew = rightBack.getCurrentPosition() + (int) (1.25*strafeX * COUNTS_PER_INCH);
+        if (strafeX != 0) {
+            leftFrontNew = leftFront.getCurrentPosition() + (int) (1.25 * strafeX * COUNTS_PER_INCH);
+            leftBackNew = leftBack.getCurrentPosition() - (int) (1.25 * strafeX * COUNTS_PER_INCH);
+            rightFrontNew = rightFront.getCurrentPosition() - (int) (1.25 * strafeX * COUNTS_PER_INCH);
+            rightBackNew = rightBack.getCurrentPosition() + (int) (1.25 * strafeX * COUNTS_PER_INCH);
 
             movePos(leftFrontNew, leftBackNew, rightFrontNew, rightBackNew);
         }
-        if(turn!=0){
-            leftFrontNew = leftFront.getCurrentPosition() - (int) Math.round((Math.PI*12.5*turn)/180*COUNTS_PER_INCH) ;
-            leftBackNew = leftBack.getCurrentPosition() - (int) Math.round((Math.PI*12.5*turn)/180*COUNTS_PER_INCH);
-            rightFrontNew = rightFront.getCurrentPosition() + (int) Math.round((Math.PI*12.5*turn)/180*COUNTS_PER_INCH);
-            rightBackNew = rightBack.getCurrentPosition() + (int) Math.round((Math.PI*12.5*turn)/180*COUNTS_PER_INCH);
+        if (turn != 0) {
+            leftFrontNew = leftFront.getCurrentPosition() - (int) Math.round((Math.PI * 12.5 * turn) / 180 * COUNTS_PER_INCH);
+            leftBackNew = leftBack.getCurrentPosition() - (int) Math.round((Math.PI * 12.5 * turn) / 180 * COUNTS_PER_INCH);
+            rightFrontNew = rightFront.getCurrentPosition() + (int) Math.round((Math.PI * 12.5 * turn) / 180 * COUNTS_PER_INCH);
+            rightBackNew = rightBack.getCurrentPosition() + (int) Math.round((Math.PI * 12.5 * turn) / 180 * COUNTS_PER_INCH);
 
             movePos(leftFrontNew, leftBackNew, rightFrontNew, rightBackNew);
         }
 
 
-
-        while(leftFront.isBusy()) {
+        while (leftFront.isBusy()) {
             telemetry.addData("LeftFontPosition", leftFront.getCurrentPosition());
             telemetry.addData("leftBackPosition", leftBack.getCurrentPosition());
             telemetry.addData("RightFontPosition", rightFront.getCurrentPosition());
@@ -204,48 +200,21 @@ public class Auto extends LinearOpMode
         leftBack.setPower(DRIVE_SPEED);
         rightBack.setPower(DRIVE_SPEED);
     }
-
-    public void dropAuto(){
-            liftServo.setPosition(.23);
-            liftMotor.setTargetPosition(11000);
-            liftMotor.setPower(1);
-            while (liftMotor.isBusy()) {
-                telemetry.addData("Lift", "Up");
-                telemetry.update();
-                Thread.yield();
-            }
-            liftMotor.setPower(0.0);
-    }
-    public void liftAuto(){
-        liftServo.setPosition(0.0975);
-        liftMotor.setTargetPosition(0);
-        liftMotor.setPower(1);
-        while (liftMotor.isBusy()) {
-            telemetry.addData("Lift", "Down");
-            telemetry.update();
-            Thread.yield();
-        }
-        liftMotor.setPower(0.0);
-    }
-
-
-    public void enableEncoders(){
-        leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-    }
     public void stopMotors(){
         leftFront.setPower(0);
         rightFront.setPower(0);
         leftBack.setPower(0);
         rightBack.setPower(0);
+    }
+    public void enableEncoders(){
+        leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 }
