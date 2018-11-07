@@ -89,7 +89,7 @@ public class GoldAlignTesting extends LinearOpMode
 
         telemetry.addData("Status", "DogeCV 2018.0 - Gold Align Example");
 
-            // Set up detector
+        // Set up detector
         detector = new GoldAlignDetector(); // Create detector
         detector.init(hardwareMap.appContext, CameraViewDisplay.getInstance()); // Initialize it with the app context and camera
         detector.useDefaults(); // Set detector to use default settings

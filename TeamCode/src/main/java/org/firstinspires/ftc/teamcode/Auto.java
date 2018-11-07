@@ -30,6 +30,9 @@
 package org.firstinspires.ftc.teamcode;
 
 
+import com.disnodeteam.dogecv.CameraViewDisplay;
+import com.disnodeteam.dogecv.DogeCV;
+import com.disnodeteam.dogecv.detectors.roverrukus.GoldAlignDetector;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -39,6 +42,7 @@ import java.util.*;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 // Roman is my extraterrestrial cat -Luis
+//
 
 @Autonomous(name="AutoControl", group="Iterative Opmode")
 public class Auto extends LinearOpMode
@@ -51,15 +55,16 @@ public class Auto extends LinearOpMode
     private DcMotor rightBack = null;
     private DcMotor liftMotor;
     private Servo liftServo;
+    private GoldAlignDetector detector;
 
 
-    static final double COUNTS_PER_MOTOR_REV = 280;    // eg: Andymark Motor Encoder
-    static final double COUNTS_PER_MOTOR_REV_60 = 420;    // eg: Andymark Motor Encoder
-    static final double DRIVE_GEAR_REDUCTION = 4+(1/6);     // This is < 1.0 if geared UP
-    static final double WHEEL_DIAMETER_INCHES = 4.0;     // For figuring circumference
-    static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
+    private static final double COUNTS_PER_MOTOR_REV = 280;    // eg: Andymark Motor Encoder
+    private static final double COUNTS_PER_MOTOR_REV_60 = 420;    // eg: Andymark Motor Encoder
+    private static final double DRIVE_GEAR_REDUCTION = 4+(1/6);     // This is < 1.0 if geared UP
+    private static final double WHEEL_DIAMETER_INCHES = 4.0;     // For figuring circumference
+    private static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
-    static final double DRIVE_SPEED = 0.5;
+    private static final double DRIVE_SPEED = 0.5;
 
     @Override
     public void runOpMode() {
@@ -68,7 +73,7 @@ public class Auto extends LinearOpMode
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        leftFront  = hardwareMap.get(DcMotor.class, "leftFront");
+        leftFront = hardwareMap.get(DcMotor.class, "leftFront");
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
         leftBack = hardwareMap.get(DcMotor.class, "leftBack");
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
@@ -90,36 +95,61 @@ public class Auto extends LinearOpMode
         leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        // Set up detector
+        detector = new GoldAlignDetector(); // Create detector
+        detector.init(hardwareMap.appContext, CameraViewDisplay.getInstance()); // Initialize it with the app context and camera
+        detector.useDefaults(); // Set detector to use default settings
+
+        // Optional tuning
+        detector.alignSize = 100
+        ; // How wide (in pixels) is the range in which the gold object will be aligned. (Represented by green bars in the preview)
+        detector.alignPosOffset = 50; // How far from center frame to offset this alignment zone.
+        detector.downscale = 0.4; // How much to downscale the input frames
+
+        detector.areaScoringMethod = DogeCV.AreaScoringMethod.MAX_AREA; // Can also be PERFECT_AREA
+        //detector.perfectAreaScorer.perfectArea = 10000; // if using PERFECT_AREA scoring
+        detector.maxAreaScorer.weight = 0.005; //
+
+        detector.ratioScorer.weight = 5; //
+        detector.ratioScorer.perfectRatio = 1.0; // Ratio adjustment
+
+        detector.enable(); // Start the detector!
+
+        enableEncoders(); //enable the encoders
+
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
 
-        waitForStart();
+
         runtime.reset();
         boolean runOnce = true;
+        waitForStart();
 
-        while (opModeIsActive()&& runOnce){
-            enableEncoders();
-
-
-
+        while (opModeIsActive() && runOnce) {
             //Instructions for the robot
-            dropAuto();//bring down
-            move(0,3,0);//moves off hook
-            liftAuto();//lowers lift arm
+            dropAuto();// Bring down
+            move(0, 10, 0);// Moves off hook
+            liftAuto();// Lowers lift arm
 
-            //check mineral colors and move
+            // Move away from lander
+            move(20, 0, 0);
+            move(0, 15, 0);
+            detection();// Check mineral colors and move
 
 
-            //move to depot
+            // Move to depot
 
-            //move to crater
+            // Drop team flag
+
+            // Move to crater
 
             //Make sure this code does not repeat
             runOnce = false;
         }
     }
 
-    public void move(float strafeY,float strafeX, float turn){
+
+    private void move(float strafeY,float strafeX, float turn){
         int leftFrontNew;
         int leftBackNew;
         int rightFrontNew;
@@ -164,7 +194,7 @@ public class Auto extends LinearOpMode
 
         stopMotors();
     }
-    public void movePos(int leftFrontNew, int leftBackNew, int rightFrontNew, int rightBackNew){
+    private void movePos(int leftFrontNew, int leftBackNew, int rightFrontNew, int rightBackNew){
         leftFront.setTargetPosition(leftFrontNew);
         leftBack.setTargetPosition(leftBackNew);
         rightFront.setTargetPosition(rightFrontNew);
@@ -176,7 +206,7 @@ public class Auto extends LinearOpMode
         rightBack.setPower(DRIVE_SPEED);
     }
 
-    public void dropAuto(){
+    private void dropAuto(){
             liftServo.setPosition(.23);
             liftMotor.setTargetPosition(11000);
             liftMotor.setPower(1);
@@ -187,7 +217,7 @@ public class Auto extends LinearOpMode
             }
             liftMotor.setPower(0.0);
     }
-    public void liftAuto(){
+    private void liftAuto(){
         liftServo.setPosition(0.0975);
         liftMotor.setTargetPosition(0);
         liftMotor.setPower(1);
@@ -200,7 +230,7 @@ public class Auto extends LinearOpMode
     }
 
 
-    public void enableEncoders(){
+    private void enableEncoders(){
         leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -213,10 +243,40 @@ public class Auto extends LinearOpMode
         rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
-    public void stopMotors(){
+    private void stopMotors(){
         leftFront.setPower(0);
         rightFront.setPower(0);
         leftBack.setPower(0);
         rightBack.setPower(0);
+    }
+    private void detection() {
+            if (detector.isFound()) {
+                //If we can see the gold after dropping
+                while (!detector.getAligned()) {
+                    if (detector.getYPosistion() < detector.getCenter()) {
+                        //move left
+                        telemetry.addData("Move Left", (true));
+                        telemetry.update();
+                        move(0, -2, 0);
+                    } else {
+                        //move right
+                        telemetry.addData("Move Right", (true)); //move foward a smudge before going right to avoid hitting lander
+                        telemetry.update();
+                        move(0, 2, 0);
+                    }
+                }
+                //now we are aligned. Go hit it.
+                telemetry.addData("Move Foward", (true));
+                telemetry.update();
+                move(25, 0, 0);
+                detector.disable();
+            } else {//we know it is the third mineral
+                //go to it and hit it
+                telemetry.addData("Move to the third mineral", (true));
+                telemetry.update();
+                move(0, 14, 0);
+                move(25, 0, 0);
+                detector.disable();
+            }
     }
 }
