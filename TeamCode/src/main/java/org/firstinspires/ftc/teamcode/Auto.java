@@ -103,45 +103,16 @@ public class Auto extends LinearOpMode
 
 
             //Instructions for the robot
-            dropAuto();
-            move(0,3,0);
+            dropAuto();//bring down
+            move(0,3,0);//moves off hook
+            liftAuto();//lowers lift arm
+
+            //check mineral colors and move
 
 
-            //Move forward towards minerals
-            move(24,0,0);
+            //move to depot
 
-            liftAuto();
-
-            //check mineral colors
-            int randomColor = 0;//(int) Math.round(Math.random()*2);
-            //knock the gold, move into depot, drop marker, back out
-            switch(randomColor){
-                case 0: move(0,4,0); //right
-                        move(18, 0,45 );
-                        move(18, 0, 0);
-
-                        move(-18, 0,0);
-                        move(-18,0,-45);
-                        move(0,-4, 0);
-                        break;
-                case 1: move(0,-4,0); //middle
-                        move(30, 0, 0);
-
-                        move(-30, 0 ,0);
-                        move(0,-4, 0);
-                        break;
-                case 2: move(0,-11,0); //left
-                        move(18, 0,-45 );
-                        move(18, 0, 0);
-
-                        move(-18, 0,0);
-                        move(-18,0,45);
-                        move(0,11, 0);
-                        break;
-            }
-
-            //move into crater
-
+            //move to crater
 
             //Make sure this code does not repeat
             runOnce = false;

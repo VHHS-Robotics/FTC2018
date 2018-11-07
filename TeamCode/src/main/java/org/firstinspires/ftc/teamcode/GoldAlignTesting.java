@@ -89,7 +89,7 @@ public class GoldAlignTesting extends LinearOpMode
 
         telemetry.addData("Status", "DogeCV 2018.0 - Gold Align Example");
 
-        // Set up detector
+            // Set up detector
         detector = new GoldAlignDetector(); // Create detector
         detector.init(hardwareMap.appContext, CameraViewDisplay.getInstance()); // Initialize it with the app context and camera
         detector.useDefaults(); // Set detector to use default settings
@@ -97,7 +97,7 @@ public class GoldAlignTesting extends LinearOpMode
         // Optional tuning
         detector.alignSize = 100
         ; // How wide (in pixels) is the range in which the gold object will be aligned. (Represented by green bars in the preview)
-        detector.alignPosOffset = 0; // How far from center frame to offset this alignment zone.
+        detector.alignPosOffset = 50; // How far from center frame to offset this alignment zone.
         detector.downscale = 0.4; // How much to downscale the input frames
 
         detector.areaScoringMethod = DogeCV.AreaScoringMethod.MAX_AREA; // Can also be PERFECT_AREA
@@ -113,36 +113,42 @@ public class GoldAlignTesting extends LinearOpMode
 
         waitForStart();
         runtime.reset();
-        boolean runOnce = true;
-        while(opModeIsActive() && runOnce){
-            telemetry.addData("IsAligned", detector.getAligned()); // Is the bot aligned with the gold mineral?
-            telemetry.addData("Y Pos", detector.getYPosistion()); // Gold Y position.
-            telemetry.update();
-
+        while(opModeIsActive()){
             //after dropping
+            move(20, 0, 0);
+            move(0, 15, 0);
             if (detector.isFound()){
                 //If we can see the gold after dropping
                 while(!detector.getAligned()){
                     if (detector.getYPosistion() < detector.getCenter()){
                         //move left
+                        telemetry.addData("Move Left", (true));
+                        telemetry.update();
                         move(0, -2, 0);
                     }
                     else{
                         //move right
-                        move(0, 2,0);
+                        telemetry.addData("Move Right",(true)); //move foward a smudge before going right to avoid hitting lander
+                        telemetry.update();
+                        move(0 ,2, 0);
                     }
                 }
                 //now we are aligned. Go hit it.
-                move(5, 0, 0);
+                telemetry.addData("Move Foward", (true));
+                telemetry.update();
+                move(25, 0, 0);
+                detector.disable();
+                break;
             }
             else{//we know it is the third mineral
                 //go to it and hit it
-                move(5, 0, 0);
+                telemetry.addData("Move to the third mineral",(true));
+                telemetry.update();
+                move(0, 14, 0);
+                move(25, 0, 0);
+                detector.disable();
+                break;
             }
-            detector.disable();
-
-
-            runOnce = false;
         }
     }
     public void move(float strafeY,float strafeX, float turn) {
