@@ -126,17 +126,17 @@ public class BlueDepot extends LinearOpMode
 
         while (opModeIsActive() && runOnce) {
             //Instructions for the robot
-            dropAuto();// Bring down
+            //dropAuto();// Bring down
             move(3, 4, 0);// Moves off hook
-            liftAuto();// Lowers lift arm
+            //liftAuto();// Lowers lift arm
 
             // Move away from lander
             move(16, 0, 0);
             move(0, 15, 0);
             detection();// Check mineral colors and move
+            move(-10,0,0);
 
-
-            // Move to depot
+            // Move to crater
             move(-15, 0, 90);
             if(robotGoldPos == 1){
                 move(20,0,0);
@@ -146,7 +146,9 @@ public class BlueDepot extends LinearOpMode
                 move(15,0,0);
             }
             // Drop team flag
-            // Move to crater
+            move(15, 0, 20);
+            move(20, 0, 0);
+            // Move to depot
 
             //Make sure this code does not repeat
             runOnce = false;
@@ -212,7 +214,7 @@ public class BlueDepot extends LinearOpMode
     }
 
     private void dropAuto(){
-            liftServo.setPosition(0.0975);
+            liftServo.setPosition(0.0945);
             liftMotor.setTargetPosition(11000);
             liftMotor.setPower(1);
             while (liftMotor.isBusy()) {
@@ -273,7 +275,7 @@ public class BlueDepot extends LinearOpMode
                     }
                 }
                 //now we are aligned. Go hit it.
-                telemetry.addData("Move Foward", (true));
+                telemetry.addData("Move Forward", (true));
                 telemetry.update();
                 move(20, 0, 0);
                 detector.disable();

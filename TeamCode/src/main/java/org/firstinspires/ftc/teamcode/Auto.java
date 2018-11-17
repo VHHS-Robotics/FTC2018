@@ -207,7 +207,7 @@ public class Auto extends LinearOpMode
     }
 
     private void dropAuto(){
-            liftServo.setPosition(0.0975);
+            liftServo.setPosition(0.0945);
             liftMotor.setTargetPosition(11000);
             liftMotor.setPower(1);
             while (liftMotor.isBusy()) {
@@ -266,7 +266,7 @@ public class Auto extends LinearOpMode
                     }
                 }
                 //now we are aligned. Go hit it.
-                telemetry.addData("Move Foward", (true));
+                telemetry.addData("Move Forward", (true));
                 telemetry.update();
                 move(25, 0, 0);
                 detector.disable();

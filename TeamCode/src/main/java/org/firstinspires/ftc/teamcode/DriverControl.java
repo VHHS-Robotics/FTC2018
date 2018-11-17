@@ -47,26 +47,14 @@ public class DriverControl extends LinearOpMode {
     private DcMotor rightFront = null;
     private DcMotor leftBack = null;
     private DcMotor rightBack = null;
-    private CRServo rightServo;
+    private Servo rightServo;
     private CRServo leftServo;
     private DcMotor liftMotor;
     private Servo liftServo;
     private DcMotor armMotor;
     private DcMotor extendMotor;
 
-    //private CRServo conveyorBelt;
-    int loopnum = 0;
-
-//    private DcMotor intakeExtend;
-//    private DcMotor scoringExtend;
-//    private DcMotor extendTilt;
-
     boolean upOrDown = false;
-
-    //private static final double     COUNTS_PER_MOTOR_REV    = 1680 ;    // Motor Encoder
-    //private static final double     AXLE_DIAMETER_INCHES   = 2.0 ;     // For figuring circumference
-    //private static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV ) / (AXLE_DIAMETER_INCHES * Math.PI);
-
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -83,7 +71,7 @@ public class DriverControl extends LinearOpMode {
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
 
         // servos used for collecting minerals
-        rightServo = hardwareMap.get(CRServo.class, "rightServo");
+        rightServo = hardwareMap.get(Servo.class, "rightServo");
         leftServo = hardwareMap.get(CRServo.class, "leftServo");
 
         //motor and servo used for lifting and lowering robot
@@ -97,8 +85,6 @@ public class DriverControl extends LinearOpMode {
         armMotor = hardwareMap.get(DcMotor.class, "armMotor");
         extendMotor = hardwareMap.get(DcMotor.class, "extendMotor");
 
-        //conveyorBelt = hardwareMap.get(CRServo.class, "conveyorBelt");
-
         //enables encoder method (Hurray for superfluous code!)
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -109,13 +95,6 @@ public class DriverControl extends LinearOpMode {
 
         liftMotor.setDirection(DcMotor.Direction.REVERSE);
         enableEncoders();
-
-        /*
-        intakeExtend.setDirection(DcMotor.Direction.FORWARD);
-        //work together
-        scoringExtend.setDirection(DcMotor.Direction.FORWARD);
-        extendTilt.setDirection(DcMotor.Direction.FORWARD);
-        */
 
         leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -155,19 +134,24 @@ public class DriverControl extends LinearOpMode {
 
 
             //Intake servo control
-            if (gamepad1.a)
+            if (gamepad1.a)//intake CRServo
                 leftServo.setPower(1);
-            rightServo.setPower(-0.75);
-            if (gamepad1.b)
-                leftServo.setPower(-1);
-            rightServo.setPower(0.75);
-            if (!gamepad1.b && !gamepad1.a)
+            else
                 leftServo.setPower(0);
-            rightServo.setPower(0);
+            //rightServo.setPower(-0.75);
+            if (gamepad1.b)//kick mineral out?
+                rightServo.setPosition(0);
+                rightServo.setPosition(0.5);
+                rightServo.setPosition(0);
+            //rightServo.setPower(0.75);
+                //leftServo.setPower(0);
+            //if (!gamepad1.b && !gamepad1.a)
+
+            //rightServo.setPower(0);
 
             //lifting and dropping robot
             if (liftRobot && !upOrDown) {
-                liftServo.setPosition(0.0975);
+                liftServo.setPosition(0.0945);
                 liftMotor.setTargetPosition(11000);
                 liftMotor.setPower(1);
                 upOrDown = true;
@@ -194,7 +178,8 @@ public class DriverControl extends LinearOpMode {
             else{
                 armMotor.setPower(0);
             }
-            //Intake Motor control
+
+            //Extend Motor control
             if(gamepad1.left_bumper){
                 extendMotor.setPower(1);
             }else if(gamepad1.right_bumper){
@@ -203,25 +188,6 @@ public class DriverControl extends LinearOpMode {
                 extendMotor.setPower(0);
             }
 
-
-            // conveyor control
-            /*if(gamepad1.x)
-                conveyorBelt.setPower(1);
-            if(gamepad1.y)
-                conveyorBelt.setPower(-1);
-            if(!gamepad1.y && !gamepad1.x)
-                conveyorBelt.setPower(0);
-//        if(liftTilt){
-//            ++toggleTwo;
-//            if(toggleTwo % 2 == 0){
-//                //encoder limit here
-//                scoringExtend.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//
-//                scoringExtend.setTargetPosition(scoringExtend.getCurrentPosition()+(int)());
-//            }else if(toggleTwo % 2 != 0){
-//                //here too
-       }
-*/
             // Send calculated power to wheels
             leftFront.setPower(leftFrontPower);
             rightFront.setPower(rightFrontPower);

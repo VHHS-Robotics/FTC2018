@@ -44,7 +44,7 @@ public class LiftMotor extends LinearOpMode
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotor liftMotor;
-    
+
     /*
      * Code to run ONCE when the driver hits INIT
      */
