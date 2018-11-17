@@ -51,6 +51,9 @@ public class DriverControl extends LinearOpMode {
     private CRServo leftServo;
     private DcMotor liftMotor;
     private Servo liftServo;
+    private DcMotor armMotor;
+    private DcMotor extendMotor;
+
     //private CRServo conveyorBelt;
     int loopnum = 0;
 
@@ -70,7 +73,6 @@ public class DriverControl extends LinearOpMode {
      */
     @Override
     public void runOpMode() {
-        telemetry.addData("Status", "Initialized");
 
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
@@ -89,7 +91,11 @@ public class DriverControl extends LinearOpMode {
         liftServo = hardwareMap.get(Servo.class, "liftServo");
 
         liftServo.setDirection(Servo.Direction.FORWARD);
-        liftServo.setPosition(0.0975);
+        liftServo.setPosition(0.23);
+
+        //Intake arm motor
+        armMotor = hardwareMap.get(DcMotor.class, "armMotor");
+        extendMotor = hardwareMap.get(DcMotor.class, "extendMotor");
 
         //conveyorBelt = hardwareMap.get(CRServo.class, "conveyorBelt");
 
@@ -116,8 +122,8 @@ public class DriverControl extends LinearOpMode {
         leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // Tell the driver that initialization is complete.
-        telemetry.addData("Status", "Initialized");
+        armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        extendMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         waitForStart();
         runtime.reset();
@@ -126,6 +132,9 @@ public class DriverControl extends LinearOpMode {
             double rightFrontPower;
             double leftBackPower;
             double rightBackPower;
+
+            telemetry.addData("triggerData", gamepad1.left_trigger);
+            telemetry.update();
 
             // Choose to drive using either Tank Mode, or POV Mode
             // Comment out the method that's not used.  The default below is POV.
@@ -158,13 +167,13 @@ public class DriverControl extends LinearOpMode {
 
             //lifting and dropping robot
             if (liftRobot && !upOrDown) {
-                liftServo.setPosition(.23);
+                liftServo.setPosition(0.0975);
                 liftMotor.setTargetPosition(11000);
                 liftMotor.setPower(1);
                 upOrDown = true;
             }
             if (dropRobot && upOrDown) {
-                liftServo.setPosition(0.0975);
+                liftServo.setPosition(0.23);
                 liftMotor.setTargetPosition(0);
                 liftMotor.setPower(1);
                 upOrDown = false;
@@ -176,15 +185,23 @@ public class DriverControl extends LinearOpMode {
                 liftMotor.setPower(0.0);
             }
 
-
-            //manual lift
-            if (gamepad1.dpad_left) {
-                liftMotor.setPower(-1);
-            } else if (gamepad1.dpad_right) {
-                liftMotor.setPower(1);
+            if(gamepad1.left_trigger > 0){
+                armMotor.setPower(gamepad1.left_trigger);
             }
-            if (gamepad1.left_bumper)
-                liftMotor.setPower(0);
+            else if(gamepad1.right_trigger > 0){
+                armMotor.setPower(-gamepad1.right_trigger);
+            }
+            else{
+                armMotor.setPower(0);
+            }
+            //Intake Motor control
+            if(gamepad1.left_bumper){
+                extendMotor.setPower(1);
+            }else if(gamepad1.right_bumper){
+                extendMotor.setPower(-1);
+            }else{
+                extendMotor.setPower(0);
+            }
 
 
             // conveyor control

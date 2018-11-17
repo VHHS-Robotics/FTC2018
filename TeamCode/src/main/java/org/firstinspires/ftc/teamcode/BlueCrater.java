@@ -33,19 +33,17 @@ package org.firstinspires.ftc.teamcode;
 import com.disnodeteam.dogecv.CameraViewDisplay;
 import com.disnodeteam.dogecv.DogeCV;
 import com.disnodeteam.dogecv.detectors.roverrukus.GoldAlignDetector;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import java.util.*;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 // Roman is my extraterrestrial cat -Luis
 //
 
-@Autonomous(name="AutoControl", group="Iterative Opmode")
-public class Auto extends LinearOpMode
+@Autonomous(name="BlueCrater", group="Iterative Opmode")
+public class BlueCrater extends LinearOpMode
 {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
@@ -128,17 +126,20 @@ public class Auto extends LinearOpMode
         while (opModeIsActive() && runOnce) {
             //Instructions for the robot
             dropAuto();// Bring down
-            move(0, 10, 0);// Moves off hook
+            move(3, 4, 0);// Moves off hook
             liftAuto();// Lowers lift arm
 
             // Move away from lander
-            move(20, 0, 0);
+            move(16, 0, 0);
             move(0, 15, 0);
             detection();// Check mineral colors and move
 
 
-            // Move to depot
 
+            /* Move to depot
+            move(-15, 0, 0);
+
+            */
             // Drop team flag
 
             // Move to crater
@@ -268,14 +269,14 @@ public class Auto extends LinearOpMode
                 //now we are aligned. Go hit it.
                 telemetry.addData("Move Foward", (true));
                 telemetry.update();
-                move(25, 0, 0);
+                move(20, 0, 0);
                 detector.disable();
             } else {//we know it is the third mineral
                 //go to it and hit it
                 telemetry.addData("Move to the third mineral", (true));
                 telemetry.update();
                 move(0, 14, 0);
-                move(25, 0, 0);
+                move(20, 0, 0);
                 detector.disable();
             }
     }

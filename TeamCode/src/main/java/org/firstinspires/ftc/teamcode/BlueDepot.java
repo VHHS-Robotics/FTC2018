@@ -33,19 +33,17 @@ package org.firstinspires.ftc.teamcode;
 import com.disnodeteam.dogecv.CameraViewDisplay;
 import com.disnodeteam.dogecv.DogeCV;
 import com.disnodeteam.dogecv.detectors.roverrukus.GoldAlignDetector;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import java.util.*;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 // Roman is my extraterrestrial cat -Luis
 //
 
-@Autonomous(name="AutoControl", group="Iterative Opmode")
-public class Auto extends LinearOpMode
+@Autonomous(name="BlueDepot", group="Iterative Opmode")
+public class BlueDepot extends LinearOpMode
 {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
@@ -56,6 +54,7 @@ public class Auto extends LinearOpMode
     private DcMotor liftMotor;
     private Servo liftServo;
     private GoldAlignDetector detector;
+    private int robotGoldPos = 0; //-1 is left, 0 is center, 1 is right
 
 
     private static final double COUNTS_PER_MOTOR_REV = 280;    // eg: Andymark Motor Encoder
@@ -128,19 +127,25 @@ public class Auto extends LinearOpMode
         while (opModeIsActive() && runOnce) {
             //Instructions for the robot
             dropAuto();// Bring down
-            move(0, 10, 0);// Moves off hook
+            move(3, 4, 0);// Moves off hook
             liftAuto();// Lowers lift arm
 
             // Move away from lander
-            move(20, 0, 0);
+            move(16, 0, 0);
             move(0, 15, 0);
             detection();// Check mineral colors and move
 
 
             // Move to depot
-
+            move(-15, 0, 90);
+            if(robotGoldPos == 1){
+                move(20,0,0);
+            }else if(robotGoldPos == -1){
+                move(10,0,0);
+            }else{
+                move(15,0,0);
+            }
             // Drop team flag
-
             // Move to crater
 
             //Make sure this code does not repeat
@@ -258,24 +263,26 @@ public class Auto extends LinearOpMode
                         telemetry.addData("Move Left", (true));
                         telemetry.update();
                         move(0, -2, 0);
+                        robotGoldPos = -1;
                     } else {
                         //move right
                         telemetry.addData("Move Right", (true)); //move foward a smudge before going right to avoid hitting lander
                         telemetry.update();
                         move(0, 2, 0);
+                        robotGoldPos = 1;
                     }
                 }
                 //now we are aligned. Go hit it.
                 telemetry.addData("Move Foward", (true));
                 telemetry.update();
-                move(25, 0, 0);
+                move(20, 0, 0);
                 detector.disable();
             } else {//we know it is the third mineral
                 //go to it and hit it
                 telemetry.addData("Move to the third mineral", (true));
                 telemetry.update();
                 move(0, 14, 0);
-                move(25, 0, 0);
+                move(20, 0, 0);
                 detector.disable();
             }
     }
