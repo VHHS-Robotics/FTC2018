@@ -42,8 +42,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 // Roman is my extraterrestrial cat -Luis
 //
 
-@Autonomous(name="BlueCrater", group="Iterative Opmode")
-public class BlueCrater extends LinearOpMode
+@Autonomous(name="AutoDepot", group="Iterative Opmode")
+public class AutoDepot extends LinearOpMode
 {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
@@ -54,6 +54,7 @@ public class BlueCrater extends LinearOpMode
     private DcMotor liftMotor;
     private Servo liftServo;
     private GoldAlignDetector detector;
+    private int robotGoldPos = 0; //-1 is left, 0 is center, 1 is right
 
 
     private static final double COUNTS_PER_MOTOR_REV = 280;    // eg: Andymark Motor Encoder
@@ -93,6 +94,7 @@ public class BlueCrater extends LinearOpMode
         leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+
         // Set up detector
         detector = new GoldAlignDetector(); // Create detector
         detector.init(hardwareMap.appContext, CameraViewDisplay.getInstance()); // Initialize it with the app context and camera
@@ -130,19 +132,24 @@ public class BlueCrater extends LinearOpMode
             //liftAuto();// Lowers lift arm
 
             // Move away from lander
-            move(16, 0, 0);
+            move(8, 0, 0);
             move(0, 15, 0);
             detection();// Check mineral colors and move
-            move(10,0,0);
-
-
-            /* Move to depot
-            move(-15, 0, 0);
-
-            */
-            // Drop team flag
+            move(-10,0,0);
 
             // Move to crater
+            move(-15, 0, 90);
+            if(robotGoldPos == 1){
+                move(20,0,0);
+            }else if(robotGoldPos == -1){
+                move(10,0,0);
+            }else{
+                move(15,0,0);
+            }
+            // Drop team flag
+            move(15, 0, 20);
+            move(20, 0, 0);
+            // Move to depot
 
             //Make sure this code does not repeat
             runOnce = false;
@@ -210,7 +217,7 @@ public class BlueCrater extends LinearOpMode
     private void dropAuto(){
             liftServo.setPosition(0.0945);
             liftMotor.setTargetPosition(11000);
-            liftMotor.setPower(1);
+            liftMotor.setPower(0.75);
             while (liftMotor.isBusy()) {
                 telemetry.addData("Lift", "Up");
                 telemetry.update();
@@ -221,7 +228,7 @@ public class BlueCrater extends LinearOpMode
     private void liftAuto(){
         liftServo.setPosition(0.23);
         liftMotor.setTargetPosition(0);
-        liftMotor.setPower(1);
+        liftMotor.setPower(0.75);
         while (liftMotor.isBusy()) {
             telemetry.addData("Lift", "Down");
             telemetry.update();
@@ -259,11 +266,13 @@ public class BlueCrater extends LinearOpMode
                         telemetry.addData("Move Left", (true));
                         telemetry.update();
                         move(0, -2, 0);
+                        robotGoldPos = -1;
                     } else {
                         //move right
                         telemetry.addData("Move Right", (true)); //move foward a smudge before going right to avoid hitting lander
                         telemetry.update();
                         move(0, 2, 0);
+                        robotGoldPos = 1;
                     }
                 }
                 //now we are aligned. Go hit it.

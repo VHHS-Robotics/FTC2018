@@ -28,6 +28,7 @@
  */
 
 package org.firstinspires.ftc.teamcode;
+import android.media.MediaPlayer;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -43,12 +44,13 @@ import com.qualcomm.robotcore.util.Range;
 public class DriverControl extends LinearOpMode {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
+    private static MediaPlayer mediaPlayer = null;
     private DcMotor leftFront = null;
     private DcMotor rightFront = null;
     private DcMotor leftBack = null;
     private DcMotor rightBack = null;
-    private Servo rightServo;
-    private CRServo leftServo;
+    private Servo releaseServo;
+    private CRServo intakeServo;
     private DcMotor liftMotor;
     private Servo liftServo;
     private DcMotor armMotor;
@@ -71,15 +73,18 @@ public class DriverControl extends LinearOpMode {
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
 
         // servos used for collecting minerals
-        rightServo = hardwareMap.get(Servo.class, "rightServo");
-        leftServo = hardwareMap.get(CRServo.class, "leftServo");
+        releaseServo = hardwareMap.get(Servo.class, "releaseServo");
+        intakeServo = hardwareMap.get(CRServo.class, "intakeServo");
 
         //motor and servo used for lifting and lowering robot
         liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
         liftServo = hardwareMap.get(Servo.class, "liftServo");
 
+        releaseServo.setDirection(Servo.Direction.FORWARD);
+        releaseServo.setPosition(0.5);
+
         liftServo.setDirection(Servo.Direction.FORWARD);
-        liftServo.setPosition(0.23);
+        liftServo.setPosition(0);
 
         //Intake arm motor
         armMotor = hardwareMap.get(DcMotor.class, "armMotor");
@@ -104,6 +109,8 @@ public class DriverControl extends LinearOpMode {
         armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         extendMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        boolean switchMode = false;
+
         waitForStart();
         runtime.reset();
         while (opModeIsActive()) {
@@ -112,7 +119,7 @@ public class DriverControl extends LinearOpMode {
             double leftBackPower;
             double rightBackPower;
 
-            telemetry.addData("triggerData", gamepad1.left_trigger);
+            telemetry.addData("SwitchMode", switchMode);
             telemetry.update();
 
             // Choose to drive using either Tank Mode, or POV Mode
@@ -120,10 +127,30 @@ public class DriverControl extends LinearOpMode {
 
             // POV Mode uses left stick to go forward, and right stick to turn.
             // - This uses basic math to combine motions and is easier to drive straight.
-            float strafe_y = -gamepad1.left_stick_y;
-            float strafe_x = gamepad1.left_stick_x;
-            float turn = gamepad1.right_stick_x;
-            boolean liftTilt = gamepad1.y;
+            float strafe_y = 0;
+            float strafe_x = 0;
+            float turn = 0;
+            if (gamepad1.start){
+                if (switchMode == false){
+                    switchMode = true;
+                    if (mediaPlayer == null) mediaPlayer = MediaPlayer.create(this.hardwareMap.appContext, R.raw.snas);
+                    mediaPlayer.seekTo(0);
+                    mediaPlayer.start();
+                }
+                else
+                    switchMode = false;
+                    mediaPlayer.stop();
+            }
+            if (!switchMode) {
+                strafe_y = -gamepad1.left_stick_y;
+                strafe_x = gamepad1.left_stick_x;
+                turn = gamepad1.right_stick_x;
+            }
+            else{
+                strafe_y = gamepad1.left_stick_y;
+                strafe_x = -gamepad1.left_stick_x;
+                turn = gamepad1.right_stick_x;
+            }
             boolean liftRobot = gamepad1.dpad_up;
             boolean dropRobot = gamepad1.dpad_down;
 
@@ -132,34 +159,38 @@ public class DriverControl extends LinearOpMode {
             leftBackPower = Range.clip(strafe_y - strafe_x + turn, -1.0, 1.0);
             rightBackPower = Range.clip(strafe_y + strafe_x - turn, -1.0, 1.0);
 
+            if(gamepad1.left_stick_button){
+                if (mediaPlayer == null) mediaPlayer = MediaPlayer.create(this.hardwareMap.appContext, R.raw.ffd);
+                    mediaPlayer.seekTo(0);
+                    mediaPlayer.start();
+            }
 
             //Intake servo control
             if (gamepad1.a)//intake CRServo
-                leftServo.setPower(1);
-            else
-                leftServo.setPower(0);
-            //rightServo.setPower(-0.75);
-            if (gamepad1.b)//kick mineral out?
-                rightServo.setPosition(0);
-                rightServo.setPosition(0.5);
-                rightServo.setPosition(0);
-            //rightServo.setPower(0.75);
-                //leftServo.setPower(0);
-            //if (!gamepad1.b && !gamepad1.a)
+                intakeServo.setPower(-1);
 
-            //rightServo.setPower(0);
+            else
+                intakeServo.setPower(0);
+
+            //Release Servo control
+            if (gamepad1.b)//kick mineral out?
+                releaseServo.setPosition(1);
+
+            else
+                releaseServo.setPosition(0.5);
+
 
             //lifting and dropping robot
             if (liftRobot && !upOrDown) {
-                liftServo.setPosition(0.0945);
+                liftServo.setPosition(.175);
                 liftMotor.setTargetPosition(11000);
-                liftMotor.setPower(1);
+                liftMotor.setPower(0.75);
                 upOrDown = true;
             }
             if (dropRobot && upOrDown) {
-                liftServo.setPosition(0.23);
+                liftServo.setPosition(0);
                 liftMotor.setTargetPosition(0);
-                liftMotor.setPower(1);
+                liftMotor.setPower(0.75);
                 upOrDown = false;
             }
             if (Math.abs(liftMotor.getCurrentPosition()) > Math.abs(liftMotor.getTargetPosition()) && upOrDown) {

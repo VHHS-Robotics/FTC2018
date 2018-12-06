@@ -68,7 +68,6 @@ public class Auto extends LinearOpMode
 
     @Override
     public void runOpMode() {
-        telemetry.addData("Status", "Initialized");
 
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
@@ -81,7 +80,7 @@ public class Auto extends LinearOpMode
         liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
         liftMotor.setDirection(DcMotor.Direction.REVERSE);
         liftServo = hardwareMap.get(Servo.class, "liftServo");
-        liftServo.setPosition(0.0975);
+        liftServo.setPosition(0.23);
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -101,13 +100,12 @@ public class Auto extends LinearOpMode
         detector.useDefaults(); // Set detector to use default settings
 
         // Optional tuning
-        detector.alignSize = 100
-        ; // How wide (in pixels) is the range in which the gold object will be aligned. (Represented by green bars in the preview)
-        detector.alignPosOffset = 50; // How far from center frame to offset this alignment zone.
+        detector.alignSize = 100; // How wide (in pixels) is the range in which the gold object will be aligned. (Represented by green bars in the preview)
+        detector.alignPosOffset = 0; // How far from center frame to offset this alignment zone.
         detector.downscale = 0.4; // How much to downscale the input frames
 
-        detector.areaScoringMethod = DogeCV.AreaScoringMethod.MAX_AREA; // Can also be PERFECT_AREA
-        //detector.perfectAreaScorer.perfectArea = 10000; // if using PERFECT_AREA scoring
+        detector.areaScoringMethod = DogeCV.AreaScoringMethod.PERFECT_AREA; // Can also be PERFECT_AREA
+        detector.perfectAreaScorer.perfectArea = 7000; // if using PERFECT_AREA scoring
         detector.maxAreaScorer.weight = 0.005; //
 
         detector.ratioScorer.weight = 5; //
@@ -127,6 +125,7 @@ public class Auto extends LinearOpMode
 
         while (opModeIsActive() && runOnce) {
             //Instructions for the robot
+            /*
             dropAuto();// Bring down
             move(0, 10, 0);// Moves off hook
             liftAuto();// Lowers lift arm
@@ -134,8 +133,16 @@ public class Auto extends LinearOpMode
             // Move away from lander
             move(20, 0, 0);
             move(0, 15, 0);
-            detection();// Check mineral colors and move
-
+            */
+            //detection();// Check mineral colors and move
+            try{
+                telemetry.addData("Size",detector.getArea());
+                telemetry.update();
+            }
+            catch(Exception e){
+                //Do nothing with error
+                // This means there is no rectangle yet
+                }
 
             // Move to depot
 
@@ -144,7 +151,7 @@ public class Auto extends LinearOpMode
             // Move to crater
 
             //Make sure this code does not repeat
-            runOnce = false;
+            //runOnce = false;
         }
     }
 
@@ -184,11 +191,11 @@ public class Auto extends LinearOpMode
 
 
         while(leftFront.isBusy()) {
-            telemetry.addData("LeftFontPosition", leftFront.getCurrentPosition());
-            telemetry.addData("leftBackPosition", leftBack.getCurrentPosition());
-            telemetry.addData("RightFontPosition", rightFront.getCurrentPosition());
-            telemetry.addData("rightBackPosition", rightBack.getCurrentPosition());
-            telemetry.update();
+            //telemetry.addData("LeftFrontPosition", leftFront.getCurrentPosition());
+            //telemetry.addData("leftBackPosition", leftBack.getCurrentPosition());
+            //telemetry.addData("RightFrontPosition", rightFront.getCurrentPosition());
+            //telemetry.addData("rightBackPosition", rightBack.getCurrentPosition());
+            //telemetry.update();
             Thread.yield();
         }
 
@@ -207,9 +214,9 @@ public class Auto extends LinearOpMode
     }
 
     private void dropAuto(){
-            liftServo.setPosition(0.0945);
+            liftServo.setPosition(0.23);
             liftMotor.setTargetPosition(11000);
-            liftMotor.setPower(1);
+            liftMotor.setPower(0.75);
             while (liftMotor.isBusy()) {
                 telemetry.addData("Lift", "Up");
                 telemetry.update();
@@ -218,9 +225,9 @@ public class Auto extends LinearOpMode
             liftMotor.setPower(0.0);
     }
     private void liftAuto(){
-        liftServo.setPosition(0.23);
+        liftServo.setPosition(0.0945);
         liftMotor.setTargetPosition(0);
-        liftMotor.setPower(1);
+        liftMotor.setPower(0.75);
         while (liftMotor.isBusy()) {
             telemetry.addData("Lift", "Down");
             telemetry.update();
@@ -255,25 +262,17 @@ public class Auto extends LinearOpMode
                 while (!detector.getAligned()) {
                     if (detector.getYPosistion() < detector.getCenter()) {
                         //move left
-                        telemetry.addData("Move Left", (true));
-                        telemetry.update();
                         move(0, -2, 0);
                     } else {
                         //move right
-                        telemetry.addData("Move Right", (true)); //move foward a smudge before going right to avoid hitting lander
-                        telemetry.update();
                         move(0, 2, 0);
                     }
                 }
                 //now we are aligned. Go hit it.
-                telemetry.addData("Move Forward", (true));
-                telemetry.update();
                 move(25, 0, 0);
                 detector.disable();
             } else {//we know it is the third mineral
                 //go to it and hit it
-                telemetry.addData("Move to the third mineral", (true));
-                telemetry.update();
                 move(0, 14, 0);
                 move(25, 0, 0);
                 detector.disable();
