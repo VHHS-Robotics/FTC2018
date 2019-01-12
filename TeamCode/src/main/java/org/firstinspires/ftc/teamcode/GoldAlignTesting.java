@@ -50,6 +50,7 @@ public class GoldAlignTesting extends LinearOpMode
     private DcMotor rightFront = null;
     private DcMotor leftBack = null;
     private DcMotor rightBack = null;
+    //int roboGoldPos = 0; //-1 left 0 middle 1 right
 
     int leftFrontNew;
     int leftBackNew;
@@ -69,7 +70,7 @@ public class GoldAlignTesting extends LinearOpMode
     @Override
     public void runOpMode() {
         //mapping for movement
-        leftFront  = hardwareMap.get(DcMotor.class, "leftFront");
+        leftFront = hardwareMap.get(DcMotor.class, "leftFront");
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
         leftBack = hardwareMap.get(DcMotor.class, "leftBack");
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
@@ -113,36 +114,34 @@ public class GoldAlignTesting extends LinearOpMode
 
         waitForStart();
         runtime.reset();
-        while(opModeIsActive()){
+        while (opModeIsActive()) {
             //after dropping
-            move(20, 0, 0);
-            move(0, 15, 0);
-            if (detector.isFound()){
+            move(18, 0, 0);
+            move(0, 8, 0);
+            if (detector.isFound()) {
                 //If we can see the gold after dropping
-                while(!detector.getAligned()){
-                    if (detector.getYPosistion() < detector.getCenter()){
+                while (!detector.getAligned()) {
+                    if (detector.getYPosistion() < detector.getCenter()) {
                         //move left
-                        telemetry.addData("Move Left", (true));
-                        telemetry.update();
+                        //telemetry.addData("Move Left", (true));
+                        //telemetry.update();
                         move(0, -2, 0);
-                    }
-                    else{
+                    } else {
                         //move right
-                        telemetry.addData("Move Right",(true)); //move foward a smudge before going right to avoid hitting lander
-                        telemetry.update();
-                        move(0 ,2, 0);
+                        //telemetry.addData("Move Right", (true)); //move foward a smudge before going right to avoid hitting lander
+                        //telemetry.update();
+                        move(0, 2, 0);
                     }
                 }
                 //now we are aligned. Go hit it.
-                telemetry.addData("Move Foward", (true));
-                telemetry.update();
+                //telemetry.addData("Move Foward", (true));
+                //telemetry.update();
                 move(25, 0, 0);
                 detector.disable();
                 break;
-            }
-            else{//we know it is the third mineral
+            } else {//we know it is the third mineral
                 //go to it and hit it
-                telemetry.addData("Move to the third mineral",(true));
+                telemetry.addData("Move to the third mineral", (true));
                 telemetry.update();
                 move(0, 14, 0);
                 move(25, 0, 0);
@@ -151,6 +150,13 @@ public class GoldAlignTesting extends LinearOpMode
             }
         }
     }
+    //  if(roboGoldPos == 1){
+//        move(20,0,0);
+//    }else if(roboGoldPos == -1){
+//        move(10,0,0);
+//    }else{
+//        move(15,0,0);
+//    }
     public void move(float strafeY,float strafeX, float turn) {
         int leftFrontNew;
         int leftBackNew;

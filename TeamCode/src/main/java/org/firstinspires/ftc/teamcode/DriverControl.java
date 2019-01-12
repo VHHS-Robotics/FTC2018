@@ -80,7 +80,7 @@ public class DriverControl extends LinearOpMode {
         liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
         liftServo = hardwareMap.get(Servo.class, "liftServo");
 
-        releaseServo.setDirection(Servo.Direction.FORWARD);
+        releaseServo.setDirection(Servo.Direction.REVERSE);
         releaseServo.setPosition(0.5);
 
         liftServo.setDirection(Servo.Direction.FORWARD);
@@ -167,7 +167,7 @@ public class DriverControl extends LinearOpMode {
 
             //Intake servo control
             if (gamepad1.a)//intake CRServo
-                intakeServo.setPower(-1);
+                intakeServo.setPower(1);
 
             else
                 intakeServo.setPower(0);

@@ -29,7 +29,6 @@
 
 package org.firstinspires.ftc.teamcode;
 
-
 import com.disnodeteam.dogecv.CameraViewDisplay;
 import com.disnodeteam.dogecv.DogeCV;
 import com.disnodeteam.dogecv.detectors.roverrukus.GoldAlignDetector;
@@ -55,6 +54,7 @@ public class AutoDepot extends LinearOpMode
     private Servo liftServo;
     private GoldAlignDetector detector;
     private int robotGoldPos = 0; //-1 is left, 0 is center, 1 is right
+    //private Servo flippy;
 
 
     private static final double COUNTS_PER_MOTOR_REV = 280;    // eg: Andymark Motor Encoder
@@ -81,6 +81,9 @@ public class AutoDepot extends LinearOpMode
         liftMotor.setDirection(DcMotor.Direction.REVERSE);
         liftServo = hardwareMap.get(Servo.class, "liftServo");
         liftServo.setPosition(0.0975);
+
+        //flippy = hardwareMap.get(Servo.class, "flippy");
+        //flippy.setPosition(0);
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
