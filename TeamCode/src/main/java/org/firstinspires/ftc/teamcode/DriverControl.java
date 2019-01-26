@@ -81,10 +81,10 @@ public class DriverControl extends LinearOpMode {
         liftServo = hardwareMap.get(Servo.class, "liftServo");
 
         releaseServo.setDirection(Servo.Direction.REVERSE);
-        releaseServo.setPosition(0.5);
+        releaseServo.setPosition(1);
 
         liftServo.setDirection(Servo.Direction.FORWARD);
-        liftServo.setPosition(0);
+        liftServo.setPosition(0.05);
 
         //Intake arm motor
         armMotor = hardwareMap.get(DcMotor.class, "armMotor");
@@ -174,21 +174,21 @@ public class DriverControl extends LinearOpMode {
 
             //Release Servo control
             if (gamepad1.b)//kick mineral out?
-                releaseServo.setPosition(1);
+                releaseServo.setPosition(.5);
 
             else
-                releaseServo.setPosition(0.5);
+                releaseServo.setPosition(1);
 
 
             //lifting and dropping robot
             if (liftRobot && !upOrDown) {
-                liftServo.setPosition(.175);
+                liftServo.setPosition(.3);
                 liftMotor.setTargetPosition(11000);
                 liftMotor.setPower(0.75);
                 upOrDown = true;
             }
             if (dropRobot && upOrDown) {
-                liftServo.setPosition(0);
+                liftServo.setPosition(0.05);
                 liftMotor.setTargetPosition(0);
                 liftMotor.setPower(0.75);
                 upOrDown = false;
