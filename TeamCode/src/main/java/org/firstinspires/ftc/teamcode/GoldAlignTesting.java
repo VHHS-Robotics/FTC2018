@@ -50,7 +50,8 @@ public class GoldAlignTesting extends LinearOpMode
     private DcMotor rightFront = null;
     private DcMotor leftBack = null;
     private DcMotor rightBack = null;
-    //int roboGoldPos = 0; //-1 left 0 middle 1 right
+
+    String location = "depot";
 
     int leftFrontNew;
     int leftBackNew;
@@ -112,11 +113,19 @@ public class GoldAlignTesting extends LinearOpMode
 
         enableEncoders(); //enable the encoders
 
+        if (gamepad1.dpad_left) {
+            location = "crater";
+            telemetry.addData("location", "crater");
+            telemetry.update();
+        } else if (gamepad1.dpad_right) {
+            telemetry.addData("location", "depot");
+            telemetry.update();
+        }
         waitForStart();
         runtime.reset();
         while (opModeIsActive()) {
             //after dropping
-            move(18, 0, 0);
+            move(18, 0, 0); // or 17
             move(0, 8, 0);
             if (detector.isFound()) {
                 //If we can see the gold after dropping
@@ -125,12 +134,12 @@ public class GoldAlignTesting extends LinearOpMode
                         //move left
                         //telemetry.addData("Move Left", (true));
                         //telemetry.update();
-                        move(0, -2, 0);
+                        move(0, -1, 0);
                     } else {
                         //move right
                         //telemetry.addData("Move Right", (true)); //move foward a smudge before going right to avoid hitting lander
                         //telemetry.update();
-                        move(0, 2, 0);
+                        move(0, 1, 0);
                     }
                 }
                 //now we are aligned. Go hit it.
@@ -144,19 +153,18 @@ public class GoldAlignTesting extends LinearOpMode
                 telemetry.addData("Move to the third mineral", (true));
                 telemetry.update();
                 move(0, 14, 0);
-                move(25, 0, 0);
+                move(5, 0, 0);
                 detector.disable();
                 break;
             }
         }
+        if(location.equals("depot")){
+            move(-8, 0, 113);
+            move(129, 0 ,0);
+        }else {
+            move(10, 0, 0);
+        }
     }
-    //  if(roboGoldPos == 1){
-//        move(20,0,0);
-//    }else if(roboGoldPos == -1){
-//        move(10,0,0);
-//    }else{
-//        move(15,0,0);
-//    }
     public void move(float strafeY,float strafeX, float turn) {
         int leftFrontNew;
         int leftBackNew;
